@@ -161,8 +161,8 @@ DREAM_VIDEO_EXPAND_SYSTEM_PROMPT_ZH = '''
 # ============================================================
 
 MAGIC_TOKENS = {
-    "image_en": ", soft focus, dreamy haze, edges dissolving into mist, ethereal blur, painterly",
-    "image_zh": "，柔焦，朦胧雾气，边缘消融于薄雾，空灵模糊，绘画质感",
+    "image_en": ", soft gaussian blur, thick dreamy fog, all edges dissolving into haze, seen through frosted glass, misty veil over entire scene, oil painting soft focus",
+    "image_zh": "，高斯柔焦模糊，浓厚梦幻雾气笼罩，所有边缘消融于朦胧中，如透过磨砂玻璃观看，油画般柔和焦点",
     "video_en": ", soft haze, dreamlike",
     "video_zh": "，朦胧，梦幻",
 }

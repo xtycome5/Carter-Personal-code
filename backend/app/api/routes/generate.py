@@ -287,10 +287,11 @@ async def check_generation_status(
 
 
 def _get_default_negative_prompt() -> str:
-    """默认负面提示词 - 排除常见质量问题"""
+    """默认负面提示词 - 梦境风格：排斥锐利写实，保留朦胧感"""
     return (
-        "blurry, low quality, distorted face, extra limbs, "
+        "sharp focus, hyper realistic, photorealistic, 3D render, CGI, "
+        "crisp edges, high definition, ultra detailed, "
+        "distorted face, extra limbs, "
         "watermark, text overlay, logo, banner, "
-        "oversaturated, underexposed, grainy noise, "
         "ugly, deformed, disfigured, poorly drawn"
     )
