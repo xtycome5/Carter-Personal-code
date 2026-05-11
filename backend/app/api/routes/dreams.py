@@ -34,7 +34,11 @@ async def create_dream(
     )
     db.add(dream)
     await db.commit()
-    await db.refresh(dream)
+    # Re-query with eager loading to avoid MissingGreenlet on serialization
+    result = await db.execute(
+        select(Dream).where(Dream.id == dream.id).options(selectinload(Dream.generations))
+    )
+    dream = result.scalar_one()
     return DreamResponse.model_validate(dream)
 
 
@@ -115,7 +119,11 @@ async def update_dream(
         setattr(dream, field, value)
 
     await db.commit()
-    await db.refresh(dream)
+    # Re-query with eager loading to avoid MissingGreenlet on serialization
+    result2 = await db.execute(
+        select(Dream).where(Dream.id == dream_id).options(selectinload(Dream.generations))
+    )
+    dream = result2.scalar_one()
     return DreamResponse.model_validate(dream)
 
 
