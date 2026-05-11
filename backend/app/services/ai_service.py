@@ -62,7 +62,7 @@ class DashScopeService:
         """
         url = f"{self.base_url}/api/v1/services/aigc/image-generation/generation"
         
-        # 构建 messages 格式
+        # wan2.7-image 使用 messages 格式
         content = [{"text": prompt}]
         
         payload = {
@@ -104,11 +104,8 @@ class DashScopeService:
         ratio: str = "16:9",
     ) -> str:
         """
-        异步提交视频生成任务，返回 task_id
-        注意：传入的 prompt 应该是已经过 expand_prompt() 扩写后的
-        
-        视频模型自带 prompt_extend 参数，但我们在外层已做了更精细的梦境扩写，
-        所以此处关闭模型自带的 prompt_extend，避免二次扩写导致语义偏移。
+        文生视频 (T2V) - 异步提交视频生成任务，返回 task_id
+        无参考图，纯文本生成视频 (happyhorse-1.0-t2v)
         """
         url = f"{self.base_url}/api/v1/services/aigc/video-generation/video-synthesis"
 
@@ -119,9 +116,50 @@ class DashScopeService:
             },
             "parameters": {
                 "resolution": resolution,
-                "duration": duration,
                 "ratio": ratio,
-                "prompt_extend": False,  # 关闭模型自带扩写，使用我们的扩写结果
+                "duration": duration,
+            },
+        }
+
+        if negative_prompt:
+            payload["input"]["negative_prompt"] = negative_prompt
+
+        headers = {
+            **self.headers,
+            "X-DashScope-Async": "enable",
+        }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            return data["output"]["task_id"]
+
+    async def generate_video_from_image(
+        self,
+        prompt: str,
+        image_url: str,
+        negative_prompt: Optional[str] = None,
+        resolution: str = "720P",
+        duration: int = 5,
+        ratio: str = "16:9",
+    ) -> str:
+        """
+        图生视频 (I2V) - 以参考图为基础生成视频，返回 task_id
+        当 dream 已有生成好的图片时使用此方法 (happyhorse-1.0-i2v)
+        """
+        url = f"{self.base_url}/api/v1/services/aigc/video-generation/video-synthesis"
+
+        payload = {
+            "model": settings.VIDEO_I2V_MODEL,
+            "input": {
+                "prompt": prompt,
+                "media": [{"type": "first_frame", "url": image_url}],
+            },
+            "parameters": {
+                "resolution": resolution,
+                "ratio": ratio,
+                "duration": duration,
             },
         }
 
@@ -157,8 +195,17 @@ class DashScopeService:
             }
 
             if status == "SUCCEEDED":
-                # 图片生成返回 results 数组
-                if "results" in output:
+                # wan2.7-image 返回 choices 格式
+                if "choices" in output:
+                    choices = output["choices"]
+                    if choices:
+                        msg_content = choices[0].get("message", {}).get("content", [])
+                        for item in msg_content:
+                            if item.get("type") == "image" or "image" in item:
+                                result["result_url"] = item.get("image", "")
+                                break
+                # 旧版图片模型返回 results 数组
+                elif "results" in output:
                     result["result_url"] = output["results"][0].get("url", "")
                 # 视频生成返回 video_url
                 elif "video_url" in output:

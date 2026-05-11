@@ -32,19 +32,19 @@ export default function Navbar() {
               href="/dashboard"
               className="text-[#94a3b8] hover:text-white transition-colors"
             >
-              首页
+              Home
             </Link>
             <Link
               href="/record"
               className="text-[#94a3b8] hover:text-white transition-colors"
             >
-              记录梦境
+              Record Dream
             </Link>
             <Link
               href="/gallery"
               className="text-[#94a3b8] hover:text-white transition-colors"
             >
-              梦境画廊
+              Gallery
             </Link>
           </div>
         )}
@@ -66,7 +66,7 @@ export default function Navbar() {
             </div>
           ) : (
             <Link href="/auth" className="dream-button text-sm py-2 px-4">
-              开始记录
+              Get Started
             </Link>
           )}
         </div>

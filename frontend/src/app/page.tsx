@@ -30,15 +30,15 @@ export default function HomePage() {
 
         <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
           <span className="bg-gradient-to-r from-[#6366f1] via-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
-            记录你的梦境
+            Record Your Dreams
           </span>
           <br />
-          <span className="text-white">让 AI 帮你重现</span>
+          <span className="text-white">Let AI Bring Them to Life</span>
         </h1>
 
         <p className="text-lg md:text-xl text-[#94a3b8] mb-10 max-w-2xl mx-auto">
-          醒来后描述你的梦，AI 将为你生成精美的图片和视频，
-          让每一个梦境都能被看见、被保存、被分享。
+          Describe your dreams after waking up. AI will generate stunning images
+          and videos, so every dream can be seen, saved, and shared.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -47,13 +47,13 @@ export default function HomePage() {
             className="dream-button text-lg px-8 py-4 inline-flex items-center gap-2"
           >
             <Sparkles className="w-5 h-5" />
-            免费开始
+            Get Started Free
           </Link>
           <Link
             href="#features"
             className="px-8 py-4 rounded-xl border border-[#2a2a5e] text-[#94a3b8] hover:text-white hover:border-[#6366f1] transition-all inline-flex items-center gap-2"
           >
-            了解更多
+            Learn More
           </Link>
         </div>
       </motion.div>
@@ -67,7 +67,7 @@ export default function HomePage() {
         className="relative z-10 mt-32 w-full max-w-5xl"
       >
         <h2 className="text-3xl font-bold text-center mb-12 text-white">
-          两大核心功能
+          Two Core Features
         </h2>
 
         <div className="grid md:grid-cols-2 gap-8">
@@ -76,12 +76,12 @@ export default function HomePage() {
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#a855f7] flex items-center justify-center mb-6">
               <Image className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-3">梦境生图</h3>
+            <h3 className="text-xl font-bold text-white mb-3">Dream to Image</h3>
             <p className="text-[#94a3b8] mb-4">
-              将梦境描述转化为精美图片。支持多种艺术风格：水彩梦幻、赛博朋克、古典油画、宫崎骏风等。
+              Transform dream descriptions into beautiful images. Supports multiple art styles: watercolor, cyberpunk, classical oil painting, Ghibli, and more.
             </p>
             <div className="flex flex-wrap gap-2">
-              {["超现实", "水彩", "赛博朋克", "宫崎骏", "暗黑哥特"].map((tag) => (
+              {["Surreal", "Watercolor", "Cyberpunk", "Ghibli", "Gothic"].map((tag) => (
                 <span
                   key={tag}
                   className="px-3 py-1 rounded-full text-xs bg-[#6366f1]/10 text-[#818cf8] border border-[#6366f1]/20"
@@ -97,12 +97,12 @@ export default function HomePage() {
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#a855f7] to-[#ec4899] flex items-center justify-center mb-6">
               <Video className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-3">梦境生视频</h3>
+            <h3 className="text-xl font-bold text-white mb-3">Dream to Video</h3>
             <p className="text-[#94a3b8] mb-4">
-              将梦境转化为 5-15 秒短视频。支持 720P/1080P，多种画面比例，让梦境"动起来"。
+              Turn dreams into 5-second cinematic clips. Supports 720P/1080P with multiple aspect ratios. Bring your dreams to motion.
             </p>
             <div className="flex flex-wrap gap-2">
-              {["梦境回放", "关键片段", "梦境循环", "梦境延续"].map((tag) => (
+              {["Replay", "Key Scene", "Loop", "Continuation"].map((tag) => (
                 <span
                   key={tag}
                   className="px-3 py-1 rounded-full text-xs bg-[#a855f7]/10 text-[#c084fc] border border-[#a855f7]/20"
@@ -117,7 +117,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="relative z-10 mt-24 mb-8 text-center text-[#64748b] text-sm">
-        <p>Dream Recorder &copy; 2025 - AI 梦境记录器</p>
+        <p>Dream Recorder &copy; 2025 - AI Dream Visualizer</p>
       </footer>
     </div>
   );

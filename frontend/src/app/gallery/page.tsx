@@ -65,16 +65,16 @@ export default function GalleryPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">梦境画廊</h1>
-            <p className="text-[#94a3b8] mt-1">你的所有 AI 生成作品</p>
+            <h1 className="text-3xl font-bold text-white">Dream Gallery</h1>
+            <p className="text-[#94a3b8] mt-1">All your AI-generated creations</p>
           </div>
 
           {/* Filter */}
           <div className="flex gap-2">
             {[
-              { id: "all", label: "全部" },
-              { id: "image", label: "图片", icon: ImageIcon },
-              { id: "video", label: "视频", icon: Video },
+              { id: "all", label: "All" },
+              { id: "image", label: "Images", icon: ImageIcon },
+              { id: "video", label: "Videos", icon: Video },
             ].map((f) => (
               <button
                 key={f.id}
@@ -102,12 +102,12 @@ export default function GalleryPage() {
         ) : filteredGenerations.length === 0 ? (
           <div className="glass-card p-16 text-center">
             <ImageIcon className="w-16 h-16 text-[#6366f1] mx-auto mb-4 opacity-30" />
-            <p className="text-[#94a3b8] mb-2">画廊还是空的</p>
+            <p className="text-[#94a3b8] mb-2">Your gallery is empty</p>
             <p className="text-[#64748b] text-sm mb-6">
-              记录梦境并生成图片/视频后，它们会出现在这里
+              Record a dream and generate images or videos — they will appear here
             </p>
             <Link href="/record" className="dream-button inline-block">
-              去记录梦境
+              Record a Dream
             </Link>
           </div>
         ) : (
@@ -153,7 +153,10 @@ export default function GalleryPage() {
                         <Video className="w-3 h-3 text-[#a855f7]" />
                       )}
                       <span className="text-xs text-[#64748b]">
-                        {gen.style} · {new Date(gen.created_at).toLocaleDateString("zh-CN")}
+                        {gen.style} · {new Date(gen.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </span>
                     </div>
                   </div>

@@ -3,28 +3,28 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Sparkles, Moon, Wand2, Save } from "lucide-react";
+import { Sparkles, Moon, Wand2, Save, Image as ImageIcon, Video } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { dreamsAPI, generateAPI } from "@/lib/api";
 
 const MOODS = [
-  { id: "fantasy", label: "奇幻", emoji: "✨" },
-  { id: "peaceful", label: "平静", emoji: "🌙" },
-  { id: "scary", label: "恐怖", emoji: "👻" },
-  { id: "sad", label: "悲伤", emoji: "🌧️" },
-  { id: "exciting", label: "刺激", emoji: "⚡" },
-  { id: "romantic", label: "浪漫", emoji: "💫" },
-  { id: "mysterious", label: "神秘", emoji: "🔮" },
-  { id: "nostalgic", label: "怀旧", emoji: "🍂" },
+  { id: "fantasy", label: "Fantasy", emoji: "✨" },
+  { id: "peaceful", label: "Peaceful", emoji: "🌙" },
+  { id: "scary", label: "Scary", emoji: "👻" },
+  { id: "sad", label: "Sad", emoji: "🌧️" },
+  { id: "exciting", label: "Exciting", emoji: "⚡" },
+  { id: "romantic", label: "Romantic", emoji: "💫" },
+  { id: "mysterious", label: "Mysterious", emoji: "🔮" },
+  { id: "nostalgic", label: "Nostalgic", emoji: "🍂" },
 ];
 
 const STYLES = [
-  { id: "surreal", label: "超现实主义", desc: "达利风格的梦幻世界" },
-  { id: "watercolor", label: "水彩梦幻", desc: "柔和的水彩画风" },
-  { id: "cyberpunk", label: "赛博朋克", desc: "霓虹灯与未来城市" },
-  { id: "classical", label: "古典油画", desc: "文艺复兴风格" },
-  { id: "ghibli", label: "宫崎骏风", desc: "温暖的动画世界" },
-  { id: "gothic", label: "暗黑哥特", desc: "月光下的神秘" },
+  { id: "surreal", label: "Surrealism", desc: "Dalí-inspired dreamscapes" },
+  { id: "watercolor", label: "Watercolor", desc: "Soft, dreamy brush strokes" },
+  { id: "cyberpunk", label: "Cyberpunk", desc: "Neon lights & future cities" },
+  { id: "classical", label: "Classical", desc: "Renaissance oil painting" },
+  { id: "ghibli", label: "Ghibli", desc: "Warm animated world" },
+  { id: "gothic", label: "Dark Gothic", desc: "Moonlit mysteries" },
 ];
 
 export default function RecordPage() {
@@ -38,7 +38,7 @@ export default function RecordPage() {
   const [tagInput, setTagInput] = useState("");
   const [selectedStyle, setSelectedStyle] = useState("surreal");
   const [saving, setSaving] = useState(false);
-  const [generating, setGenerating] = useState(false);
+  const [generating, setGenerating] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const addTag = () => {
@@ -54,7 +54,7 @@ export default function RecordPage() {
 
   const handleSave = async () => {
     if (!content.trim()) {
-      setError("请描述你的梦境");
+      setError("Please describe your dream");
       return;
     }
     setError("");
@@ -69,22 +69,22 @@ export default function RecordPage() {
       });
       router.push(`/dreams/${dream.id}`);
     } catch (err: any) {
-      setError(err.message || "保存失败");
+      setError(err.message || "Failed to save");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleSaveAndGenerate = async () => {
+  const handleSaveAndGenerate = async (type: "image" | "video") => {
     if (!content.trim()) {
-      setError("请描述你的梦境");
+      setError("Please describe your dream");
       return;
     }
     setError("");
-    setGenerating(true);
+    setGenerating(type);
 
     try {
-      // 先保存梦境
+      // Save dream first
       const dream: any = await dreamsAPI.create(token!, {
         title: title || undefined,
         content,
@@ -92,23 +92,27 @@ export default function RecordPage() {
         tags,
       });
 
-      // AI 增强描述
-      await generateAPI.enhance(token!, {
-        dream_id: dream.id,
-        style: selectedStyle,
-      });
-
-      // 生成图片
-      await generateAPI.image(token!, {
-        dream_id: dream.id,
-        style: selectedStyle,
-      });
+      if (type === "image") {
+        // Generate image
+        await generateAPI.image(token!, {
+          dream_id: dream.id,
+          style: selectedStyle,
+        });
+      } else {
+        // Generate video (T2V since no image exists yet)
+        await generateAPI.video(token!, {
+          dream_id: dream.id,
+          style: selectedStyle,
+          duration: 5,
+          resolution: "720P",
+        });
+      }
 
       router.push(`/dreams/${dream.id}`);
     } catch (err: any) {
-      setError(err.message || "生成失败");
+      setError(err.message || "Generation failed");
     } finally {
-      setGenerating(false);
+      setGenerating(null);
     }
   };
 
@@ -122,10 +126,10 @@ export default function RecordPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
             <Moon className="w-8 h-8 text-[#a855f7]" />
-            记录梦境
+            Record a Dream
           </h1>
           <p className="text-[#94a3b8]">
-            尽可能详细地描述你的梦境，AI 会帮你将它可视化
+            Describe your dream in as much detail as possible. AI will visualize it for you.
           </p>
         </div>
 
@@ -134,12 +138,12 @@ export default function RecordPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Title */}
             <div>
-              <label className="block text-sm text-[#94a3b8] mb-2">梦境标题（可选）</label>
+              <label className="block text-sm text-[#94a3b8] mb-2">Dream Title (optional)</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="给这个梦起个名字..."
+                placeholder="Give this dream a name..."
                 className="dream-input"
               />
             </div>
@@ -147,23 +151,23 @@ export default function RecordPage() {
             {/* Content */}
             <div>
               <label className="block text-sm text-[#94a3b8] mb-2">
-                梦境描述 <span className="text-red-400">*</span>
+                Dream Description <span className="text-red-400">*</span>
               </label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="描述你的梦境...尽可能包含场景、人物、情节、颜色、声音等细节。例如：我梦见自己在一片紫色的海洋上漂浮，天空中有三个月亮..."
+                placeholder="Describe your dream... Include scenes, characters, plot, colors, sounds, and other details. For example: I dreamed I was floating on a purple ocean with three moons in the sky..."
                 rows={8}
                 className="dream-input resize-none"
               />
               <p className="text-xs text-[#64748b] mt-1">
-                {content.length} 字 · 描述越详细，生成效果越好
+                {content.length} characters - the more detail, the better the result
               </p>
             </div>
 
             {/* Tags */}
             <div>
-              <label className="block text-sm text-[#94a3b8] mb-2">标签</label>
+              <label className="block text-sm text-[#94a3b8] mb-2">Tags</label>
               <div className="flex gap-2 mb-2 flex-wrap">
                 {tags.map((tag) => (
                   <span
@@ -186,7 +190,7 @@ export default function RecordPage() {
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
-                  placeholder="添加标签，回车确认"
+                  placeholder="Add a tag, press Enter to confirm"
                   className="dream-input flex-1"
                 />
               </div>
@@ -197,7 +201,7 @@ export default function RecordPage() {
           <div className="space-y-6">
             {/* Mood */}
             <div className="glass-card p-5">
-              <h3 className="text-sm font-medium text-white mb-3">情绪基调</h3>
+              <h3 className="text-sm font-medium text-white mb-3">Mood</h3>
               <div className="grid grid-cols-2 gap-2">
                 {MOODS.map((m) => (
                   <button
@@ -217,7 +221,7 @@ export default function RecordPage() {
 
             {/* Style */}
             <div className="glass-card p-5">
-              <h3 className="text-sm font-medium text-white mb-3">生成风格</h3>
+              <h3 className="text-sm font-medium text-white mb-3">Art Style</h3>
               <div className="space-y-2">
                 {STYLES.map((s) => (
                   <button
@@ -243,30 +247,48 @@ export default function RecordPage() {
               )}
 
               <button
-                onClick={handleSaveAndGenerate}
-                disabled={generating || saving}
+                onClick={() => handleSaveAndGenerate("image")}
+                disabled={generating !== null || saving}
                 className="dream-button w-full flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {generating ? (
+                {generating === "image" ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    AI 生成中...
+                    Generating Image...
                   </>
                 ) : (
                   <>
-                    <Wand2 className="w-4 h-4" />
-                    保存并生成图片
+                    <ImageIcon className="w-4 h-4" />
+                    Save & Generate Image
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => handleSaveAndGenerate("video")}
+                disabled={generating !== null || saving}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#a855f7] to-[#ec4899] text-white font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all disabled:opacity-50"
+              >
+                {generating === "video" ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Generating Video...
+                  </>
+                ) : (
+                  <>
+                    <Video className="w-4 h-4" />
+                    Save & Generate Video
                   </>
                 )}
               </button>
 
               <button
                 onClick={handleSave}
-                disabled={saving || generating}
+                disabled={saving || generating !== null}
                 className="w-full py-3 rounded-xl border border-[#2a2a5e] text-[#94a3b8] hover:text-white hover:border-[#6366f1] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                仅保存
+                Save Only
               </button>
             </div>
           </div>

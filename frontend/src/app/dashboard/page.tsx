@@ -58,9 +58,9 @@ export default function DashboardPage() {
         className="mb-10"
       >
         <h1 className="text-3xl font-bold text-white mb-2">
-          晚安，{user?.nickname || "梦旅人"} 🌙
+          Good evening, {user?.nickname || "Dreamer"} 🌙
         </h1>
-        <p className="text-[#94a3b8]">今天做了什么梦？记录下来，让 AI 帮你重现。</p>
+        <p className="text-[#94a3b8]">What did you dream about? Record it and let AI bring it to life.</p>
       </motion.div>
 
       {/* Quick Actions */}
@@ -74,8 +74,8 @@ export default function DashboardPage() {
               <Plus className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-white">记录新梦境</h3>
-              <p className="text-sm text-[#94a3b8]">描述你的梦</p>
+              <h3 className="font-bold text-white">Record a Dream</h3>
+              <p className="text-sm text-[#94a3b8]">Describe your dream</p>
             </div>
           </div>
         </Link>
@@ -89,8 +89,8 @@ export default function DashboardPage() {
               <Image className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-white">梦境画廊</h3>
-              <p className="text-sm text-[#94a3b8]">浏览 AI 生成</p>
+              <h3 className="font-bold text-white">Dream Gallery</h3>
+              <p className="text-sm text-[#94a3b8]">Browse AI creations</p>
             </div>
           </div>
         </Link>
@@ -101,9 +101,9 @@ export default function DashboardPage() {
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-white">本月统计</h3>
+              <h3 className="font-bold text-white">This Month</h3>
               <p className="text-sm text-[#94a3b8]">
-                {dreams.length} 个梦境记录
+                {dreams.length} dream{dreams.length !== 1 ? "s" : ""} recorded
               </p>
             </div>
           </div>
@@ -113,9 +113,9 @@ export default function DashboardPage() {
       {/* Recent Dreams */}
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">最近的梦</h2>
+          <h2 className="text-xl font-bold text-white">Recent Dreams</h2>
           <Link href="/dreams" className="text-sm text-[#818cf8] hover:text-[#a855f7]">
-            查看全部 →
+            View all →
           </Link>
         </div>
 
@@ -131,9 +131,9 @@ export default function DashboardPage() {
         ) : dreams.length === 0 ? (
           <div className="glass-card p-12 text-center">
             <Moon className="w-12 h-12 text-[#6366f1] mx-auto mb-4 opacity-50" />
-            <p className="text-[#94a3b8] mb-4">还没有梦境记录</p>
+            <p className="text-[#94a3b8] mb-4">No dreams recorded yet</p>
             <Link href="/record" className="dream-button inline-flex items-center gap-2">
-              <Plus className="w-4 h-4" /> 记录第一个梦
+              <Plus className="w-4 h-4" /> Record Your First Dream
             </Link>
           </div>
         ) : (
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                           <span>{moodEmoji[dream.mood] || "💭"}</span>
                         )}
                         <h3 className="font-semibold text-white">
-                          {dream.title || "未命名的梦"}
+                          {dream.title || "Untitled Dream"}
                         </h3>
                       </div>
                       <p className="text-[#94a3b8] text-sm line-clamp-2">
@@ -164,7 +164,11 @@ export default function DashboardPage() {
                       </p>
                       <div className="flex items-center gap-3 mt-3">
                         <span className="text-xs text-[#64748b]">
-                          {new Date(dream.created_at).toLocaleDateString("zh-CN")}
+                          {new Date(dream.created_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
                         </span>
                         {dream.generations.length > 0 && (
                           <span className="flex items-center gap-1 text-xs text-[#818cf8]">

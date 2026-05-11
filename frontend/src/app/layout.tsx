@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dream Recorder - AI 梦境记录器",
-  description: "用 AI 将你的梦境变成图片和视频",
+  title: "Dream Recorder - AI Dream Visualizer",
+  description: "Turn your dreams into stunning images and videos with AI",
 };
 
 export default function RootLayout({
@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="zh"
+      lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#0a0a1a]">

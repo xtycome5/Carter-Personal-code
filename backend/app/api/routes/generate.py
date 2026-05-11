@@ -144,11 +144,9 @@ async def generate_video(
     """
     生成梦境视频
     
-    流程：
-    1. 获取梦境记录
-    2. 调用 Prompt Expansion Service 扩写描述（视频专用 System Prompt）
-    3. 将扩写后的 prompt 提交到万相视频生成 API（关闭模型自带 prompt_extend）
-    4. 保存扩写结果和生成记录
+    智能选择生成模式：
+    - 若该 dream 已有生成成功的图片 → 图生视频 (I2V)，以图片为参考
+    - 若没有现成图片 → 文生视频 (T2V)，纯文本生成
     """
     # 获取梦境
     result = await db.execute(
@@ -159,10 +157,21 @@ async def generate_video(
         raise HTTPException(status_code=404, detail="Dream not found")
 
     try:
-        # ===== Step 1: Prompt Expansion（视频专用扩写）=====
+        # ===== Step 1: 检查是否有已完成的图片生成 =====
+        image_result = await db.execute(
+            select(Generation).where(
+                Generation.dream_id == dream.id,
+                Generation.type == "image",
+                Generation.status == "completed",
+            ).order_by(Generation.created_at.desc()).limit(1)
+        )
+        existing_image = image_result.scalar_one_or_none()
+        use_i2v = existing_image and existing_image.result_url
+
+        # ===== Step 2: Prompt Expansion（视频专用扩写）=====
         expanded_prompt = await dashscope_service.expand_prompt(
             content=dream.content,
-            gen_type="video",  # 使用视频专用 system prompt，强调运动和时间
+            gen_type="video",
             style=data.style,
             mood=dream.mood,
         )
@@ -171,16 +180,30 @@ async def generate_video(
         dream.enhanced_content = expanded_prompt
         await db.flush()
 
-        # ===== Step 2: 提交视频生成任务 =====
-        task_id = await dashscope_service.generate_video(
-            prompt=expanded_prompt,
-            negative_prompt=_get_default_negative_prompt(),
-            resolution=data.resolution,
-            duration=data.duration,
-            ratio=data.ratio,
-        )
+        # ===== Step 3: 提交视频生成任务（I2V 或 T2V）=====
+        if use_i2v:
+            # 有参考图 → 图生视频
+            task_id = await dashscope_service.generate_video_from_image(
+                prompt=expanded_prompt,
+                image_url=existing_image.result_url,
+                negative_prompt=_get_default_negative_prompt(),
+                resolution=data.resolution,
+                duration=data.duration,
+                ratio=data.ratio,
+            )
+            gen_mode = "i2v"
+        else:
+            # 无参考图 → 文生视频
+            task_id = await dashscope_service.generate_video(
+                prompt=expanded_prompt,
+                negative_prompt=_get_default_negative_prompt(),
+                resolution=data.resolution,
+                duration=data.duration,
+                ratio=data.ratio,
+            )
+            gen_mode = "t2v"
 
-        # ===== Step 3: 保存生成记录 =====
+        # ===== Step 4: 保存生成记录 =====
         generation = Generation(
             dream_id=dream.id,
             user_id=UUID(user_id),
@@ -190,9 +213,9 @@ async def generate_video(
             status="processing",
             task_id=task_id,
             metadata_json={
-                "resolution": data.resolution,
                 "duration": data.duration,
-                "ratio": data.ratio,
+                "mode": gen_mode,
+                "reference_image": existing_image.result_url if use_i2v else None,
                 "original_content": dream.content,
             },
         )

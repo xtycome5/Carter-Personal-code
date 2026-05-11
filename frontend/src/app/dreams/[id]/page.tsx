@@ -101,7 +101,7 @@ export default function DreamDetailPage() {
       setPolling((prev) => new Set(prev).add(gen.id));
       loadDream();
     } catch (err: any) {
-      alert(err.message || "生成失败");
+      alert(err.message || "Generation failed");
     } finally {
       setGenerating(null);
     }
@@ -123,7 +123,7 @@ export default function DreamDetailPage() {
       setPolling((prev) => new Set(prev).add(gen.id));
       loadDream();
     } catch (err: any) {
-      alert(err.message || "生成失败");
+      alert(err.message || "Generation failed");
     } finally {
       setGenerating(null);
     }
@@ -144,13 +144,14 @@ export default function DreamDetailPage() {
   if (!dream) {
     return (
       <div className="max-w-5xl mx-auto px-6 py-8 text-center text-[#94a3b8]">
-        梦境不存在
+        Dream not found
       </div>
     );
   }
 
   const images = dream.generations.filter((g) => g.type === "image");
   const videos = dream.generations.filter((g) => g.type === "video");
+  const hasCompletedImage = images.some((g) => g.status === "completed" && g.result_url);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
@@ -159,7 +160,7 @@ export default function DreamDetailPage() {
         <div className="glass-card p-8 mb-8">
           <div className="flex items-center gap-3 mb-4">
             <h1 className="text-2xl font-bold text-white">
-              {dream.title || "未命名的梦"}
+              {dream.title || "Untitled Dream"}
             </h1>
             {dream.mood && (
               <span className="px-3 py-1 rounded-full text-xs bg-[#6366f1]/10 text-[#818cf8] border border-[#6366f1]/20">
@@ -173,7 +174,7 @@ export default function DreamDetailPage() {
           {dream.enhanced_content && (
             <div className="mt-4 p-4 rounded-xl bg-[#0a0a1a]/50 border border-[#6366f1]/10">
               <p className="text-xs text-[#818cf8] mb-2 flex items-center gap-1">
-                <Wand2 className="w-3 h-3" /> AI 增强描述
+                <Wand2 className="w-3 h-3" /> AI Enhanced Description
               </p>
               <p className="text-sm text-[#94a3b8] italic">{dream.enhanced_content}</p>
             </div>
@@ -181,7 +182,13 @@ export default function DreamDetailPage() {
 
           <div className="flex items-center gap-4 mt-4">
             <span className="text-xs text-[#64748b]">
-              {new Date(dream.created_at).toLocaleString("zh-CN")}
+              {new Date(dream.created_at).toLocaleString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              })}
             </span>
             {dream.tags.map((tag) => (
               <span
@@ -206,7 +213,7 @@ export default function DreamDetailPage() {
             ) : (
               <ImageIcon className="w-4 h-4" />
             )}
-            生成图片
+            Generate Image
           </button>
           <button
             onClick={() => handleGenerateVideo("dreamlike")}
@@ -218,7 +225,7 @@ export default function DreamDetailPage() {
             ) : (
               <Video className="w-4 h-4" />
             )}
-            生成视频
+            {hasCompletedImage ? "Generate Video (I2V)" : "Generate Video (T2V)"}
           </button>
         </div>
 
@@ -227,7 +234,7 @@ export default function DreamDetailPage() {
           <div className="mb-8">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <ImageIcon className="w-5 h-5 text-[#6366f1]" />
-              梦境图片
+              Dream Images
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
               {images.map((gen) => (
@@ -253,17 +260,22 @@ export default function DreamDetailPage() {
                     <div className="aspect-square flex items-center justify-center bg-[#0a0a1a]">
                       <div className="text-center">
                         <RefreshCw className="w-8 h-8 text-[#6366f1] animate-spin mx-auto mb-3" />
-                        <p className="text-sm text-[#94a3b8]">AI 正在绘制你的梦...</p>
+                        <p className="text-sm text-[#94a3b8]">AI is painting your dream...</p>
                       </div>
                     </div>
                   ) : (
                     <div className="aspect-square flex items-center justify-center bg-[#0a0a1a]">
-                      <p className="text-sm text-red-400">生成失败</p>
+                      <p className="text-sm text-red-400">Generation failed</p>
                     </div>
                   )}
                   <div className="p-3">
                     <span className="text-xs text-[#64748b]">
-                      {gen.style} · {new Date(gen.created_at).toLocaleString("zh-CN")}
+                      {gen.style} · {new Date(gen.created_at).toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
                     </span>
                   </div>
                 </div>
@@ -277,7 +289,7 @@ export default function DreamDetailPage() {
           <div>
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <Video className="w-5 h-5 text-[#a855f7]" />
-              梦境视频
+              Dream Videos
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
               {videos.map((gen) => (
@@ -293,18 +305,23 @@ export default function DreamDetailPage() {
                     <div className="aspect-video flex items-center justify-center bg-[#0a0a1a]">
                       <div className="text-center">
                         <RefreshCw className="w-8 h-8 text-[#a855f7] animate-spin mx-auto mb-3" />
-                        <p className="text-sm text-[#94a3b8]">视频生成中，请稍候...</p>
-                        <p className="text-xs text-[#64748b] mt-1">通常需要 1-3 分钟</p>
+                        <p className="text-sm text-[#94a3b8]">Generating video, please wait...</p>
+                        <p className="text-xs text-[#64748b] mt-1">This usually takes 1-3 minutes</p>
                       </div>
                     </div>
                   ) : (
                     <div className="aspect-video flex items-center justify-center bg-[#0a0a1a]">
-                      <p className="text-sm text-red-400">生成失败</p>
+                      <p className="text-sm text-red-400">Generation failed</p>
                     </div>
                   )}
                   <div className="p-3">
                     <span className="text-xs text-[#64748b]">
-                      {gen.style} · {new Date(gen.created_at).toLocaleString("zh-CN")}
+                      {gen.style} · {new Date(gen.created_at).toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
                     </span>
                   </div>
                 </div>

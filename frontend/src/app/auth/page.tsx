@@ -32,7 +32,7 @@ export default function AuthPage() {
       setAuth(result.user, result.access_token);
       router.push("/dashboard");
     } catch (err: any) {
-      setError(err.message || "操作失败，请重试");
+      setError(err.message || "Operation failed, please try again");
     } finally {
       setLoading(false);
     }
@@ -45,7 +45,7 @@ export default function AuthPage() {
       const { url } = await getUrl();
       window.location.href = url;
     } catch (err: any) {
-      setError(`${provider} 登录暂未配置`);
+      setError(`${provider} login is not configured yet`);
     }
   };
 
@@ -64,10 +64,10 @@ export default function AuthPage() {
         <div className="text-center mb-8">
           <Moon className="w-10 h-10 text-[#a855f7] mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white">
-            {isLogin ? "欢迎回来" : "开始记录梦境"}
+            {isLogin ? "Welcome Back" : "Start Recording Dreams"}
           </h1>
           <p className="text-[#94a3b8] mt-2">
-            {isLogin ? "登录你的梦境世界" : "创建账户，探索你的潜意识"}
+            {isLogin ? "Sign in to your dream world" : "Create an account to explore your subconscious"}
           </p>
         </div>
 
@@ -79,7 +79,7 @@ export default function AuthPage() {
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
                 <input
                   type="text"
-                  placeholder="昵称（可选）"
+                  placeholder="Nickname (optional)"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   className="dream-input pl-11"
@@ -91,7 +91,7 @@ export default function AuthPage() {
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
               <input
                 type="email"
-                placeholder="邮箱地址"
+                placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -103,7 +103,7 @@ export default function AuthPage() {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
               <input
                 type="password"
-                placeholder="密码"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -121,14 +121,14 @@ export default function AuthPage() {
               disabled={loading}
               className="dream-button w-full disabled:opacity-50"
             >
-              {loading ? "处理中..." : isLogin ? "登录" : "注册"}
+              {loading ? "Processing..." : isLogin ? "Sign In" : "Sign Up"}
             </button>
           </form>
 
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1 h-px bg-[#2a2a5e]" />
-            <span className="text-xs text-[#64748b]">或使用</span>
+            <span className="text-xs text-[#64748b]">or continue with</span>
             <div className="flex-1 h-px bg-[#2a2a5e]" />
           </div>
 
@@ -159,7 +159,7 @@ export default function AuthPage() {
 
           {/* Toggle */}
           <p className="text-center text-[#94a3b8] text-sm mt-6">
-            {isLogin ? "还没有账户？" : "已有账户？"}
+            {isLogin ? "Don't have an account?" : "Already have an account?"}
             <button
               onClick={() => {
                 setIsLogin(!isLogin);
@@ -167,7 +167,7 @@ export default function AuthPage() {
               }}
               className="text-[#818cf8] hover:text-[#a855f7] ml-1 font-medium"
             >
-              {isLogin ? "去注册" : "去登录"}
+              {isLogin ? "Sign Up" : "Sign In"}
             </button>
           </p>
         </div>
