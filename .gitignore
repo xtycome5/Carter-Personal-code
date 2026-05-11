@@ -38,3 +38,7 @@ npm-debug.log*
 coverage/
 htmlcov/
 .coverage
+
+# Deploy secrets (never commit real credentials)
+deploy/.cloud-resources.env
+deploy/credentials.env
