@@ -225,7 +225,7 @@ export default function DreamDetailPage() {
             ) : (
               <Video className="w-4 h-4" />
             )}
-            {hasCompletedImage ? "Generate Video (I2V)" : "Generate Video (T2V)"}
+            {hasCompletedImage ? "Generate Video (Reference)" : "Generate Video"}
           </button>
         </div>
 

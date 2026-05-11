@@ -17,8 +17,10 @@ class Settings(BaseSettings):
     DASHSCOPE_BASE_URL: str = "https://dashscope-intl.aliyuncs.com"
     QWEN_MODEL: str = "qwen-plus"
     IMAGE_MODEL: str = "wan2.7-image"
+    IMAGE_PRO_MODEL: str = "wan2.7-image-pro"
     VIDEO_MODEL: str = "happyhorse-1.0-t2v"
     VIDEO_I2V_MODEL: str = "happyhorse-1.0-i2v"
+    VIDEO_R2V_MODEL: str = "happyhorse-1.0-r2v"
 
     # OAuth
     GOOGLE_CLIENT_ID: Optional[str] = None

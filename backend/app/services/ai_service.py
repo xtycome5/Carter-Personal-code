@@ -145,7 +145,7 @@ class DashScopeService:
         ratio: str = "16:9",
     ) -> str:
         """
-        图生视频 (I2V) - 以参考图为基础生成视频，返回 task_id
+        图生视频 (I2V) - 以首帧图为基础生成视频，返回 task_id
         当 dream 已有生成好的图片时使用此方法 (happyhorse-1.0-i2v)
         """
         url = f"{self.base_url}/api/v1/services/aigc/video-generation/video-synthesis"
@@ -165,6 +165,103 @@ class DashScopeService:
 
         if negative_prompt:
             payload["input"]["negative_prompt"] = negative_prompt
+
+        headers = {
+            **self.headers,
+            "X-DashScope-Async": "enable",
+        }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            return data["output"]["task_id"]
+
+    async def generate_video_from_reference(
+        self,
+        prompt: str,
+        reference_image_urls: list[str],
+        negative_prompt: Optional[str] = None,
+        resolution: str = "720P",
+        duration: int = 5,
+        ratio: str = "16:9",
+    ) -> str:
+        """
+        参考生视频 (R2V) - 以参考图为风格/主体参考生成视频，返回 task_id
+        当用户先生图后生视频时使用此方法 (happyhorse-1.0-r2v)
+        
+        与 I2V 区别：I2V 以图片为首帧，R2V 以图片为风格/主体参考
+        """
+        url = f"{self.base_url}/api/v1/services/aigc/video-generation/video-synthesis"
+
+        media = [{"type": "reference_image", "url": u} for u in reference_image_urls]
+
+        payload = {
+            "model": settings.VIDEO_R2V_MODEL,
+            "input": {
+                "prompt": prompt,
+                "media": media,
+            },
+            "parameters": {
+                "resolution": resolution,
+                "ratio": ratio,
+                "duration": duration,
+            },
+        }
+
+        if negative_prompt:
+            payload["input"]["negative_prompt"] = negative_prompt
+
+        headers = {
+            **self.headers,
+            "X-DashScope-Async": "enable",
+        }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            return data["output"]["task_id"]
+
+    async def generate_image_from_reference(
+        self,
+        prompt: str,
+        reference_image_url: str,
+        negative_prompt: Optional[str] = None,
+        size: str = "1024*1024",
+        n: int = 1,
+    ) -> str:
+        """
+        参考生图 (V2I) - 以参考图（视频帧）为基础生成图片，返回 task_id
+        当用户先生视频后生图时使用此方法 (wan2.7-image-pro)
+        
+        使用 messages 格式：content 中先放 image URL，再放 text prompt
+        """
+        url = f"{self.base_url}/api/v1/services/aigc/image-generation/generation"
+
+        content = [
+            {"image": reference_image_url},
+            {"text": prompt},
+        ]
+
+        payload = {
+            "model": settings.IMAGE_PRO_MODEL,
+            "input": {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": content,
+                    }
+                ]
+            },
+            "parameters": {
+                "size": size,
+                "n": n,
+            },
+        }
+
+        if negative_prompt:
+            payload["parameters"]["negative_prompt"] = negative_prompt
 
         headers = {
             **self.headers,
