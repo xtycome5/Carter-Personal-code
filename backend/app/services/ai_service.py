@@ -6,7 +6,10 @@ DashScope AI Service - 阿里云百炼 AI 接口封装
   用户描述 → PromptExpansionService(LLM扩写) → 生图/生视频 API
 """
 import httpx
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 from app.core.config import settings
 from app.services.prompt_expansion import prompt_expansion_service
 
@@ -89,11 +92,15 @@ class DashScopeService:
             "X-DashScope-Async": "enable",
         }
 
+        logger.info(f"[T2I] POST {url} | model={payload['model']} | prompt={prompt[:80]}...")
+
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(url, json=payload, headers=headers)
             response.raise_for_status()
             data = response.json()
-            return data["output"]["task_id"]
+            task_id = data["output"]["task_id"]
+            logger.info(f"[T2I] task_id={task_id}")
+            return task_id
 
     async def generate_video(
         self,
@@ -129,11 +136,15 @@ class DashScopeService:
             "X-DashScope-Async": "enable",
         }
 
+        logger.info(f"[T2V] POST {url} | model={payload['model']} | prompt={prompt[:80]}...")
+
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(url, json=payload, headers=headers)
             response.raise_for_status()
             data = response.json()
-            return data["output"]["task_id"]
+            task_id = data["output"]["task_id"]
+            logger.info(f"[T2V] task_id={task_id}")
+            return task_id
 
     async def generate_video_from_image(
         self,
@@ -171,11 +182,15 @@ class DashScopeService:
             "X-DashScope-Async": "enable",
         }
 
+        logger.info(f"[I2V] POST {url} | model={payload['model']} | image={image_url[:60]}... | prompt={prompt[:60]}...")
+
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(url, json=payload, headers=headers)
             response.raise_for_status()
             data = response.json()
-            return data["output"]["task_id"]
+            task_id = data["output"]["task_id"]
+            logger.info(f"[I2V] task_id={task_id}")
+            return task_id
 
     async def generate_video_from_reference(
         self,
@@ -217,11 +232,15 @@ class DashScopeService:
             "X-DashScope-Async": "enable",
         }
 
+        logger.info(f"[R2V] POST {url} | model={payload['model']} | refs={[u[:50] for u in reference_image_urls]} | prompt={prompt[:60]}...")
+
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(url, json=payload, headers=headers)
             response.raise_for_status()
             data = response.json()
-            return data["output"]["task_id"]
+            task_id = data["output"]["task_id"]
+            logger.info(f"[R2V] task_id={task_id}")
+            return task_id
 
     async def generate_image_from_reference(
         self,
@@ -268,11 +287,15 @@ class DashScopeService:
             "X-DashScope-Async": "enable",
         }
 
+        logger.info(f"[V2I] POST {url} | model={payload['model']} | ref_img={reference_image_url[:60]}... | prompt={prompt[:60]}...")
+
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(url, json=payload, headers=headers)
             response.raise_for_status()
             data = response.json()
-            return data["output"]["task_id"]
+            task_id = data["output"]["task_id"]
+            logger.info(f"[V2I] task_id={task_id}")
+            return task_id
 
     async def check_task_status(self, task_id: str) -> dict:
         """查询异步任务状态"""
