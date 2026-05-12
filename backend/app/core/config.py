@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     DASHSCOPE_API_KEY: str = ""
     DASHSCOPE_BASE_URL: str = "https://dashscope-intl.aliyuncs.com"
     QWEN_MODEL: str = "qwen-plus"
+    QWEN_VIDEO_PROMPT_MODEL: str = "qwen-plus"  # 视频提示词专用，可单独升级
     IMAGE_MODEL: str = "wan2.7-image"
     IMAGE_PRO_MODEL: str = "wan2.7-image-pro"
     VIDEO_MODEL: str = "happyhorse-1.0-t2v"
