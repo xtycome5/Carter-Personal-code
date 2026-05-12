@@ -105,7 +105,7 @@ export default function DreamDetailPage() {
     try {
       const gen: any = await generateAPI.video(token!, {
         dream_id: dream.id,
-        duration: 5,
+        duration: 10,
         resolution: "720P",
       });
       setPolling((prev) => new Set(prev).add(gen.id));

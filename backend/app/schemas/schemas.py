@@ -101,7 +101,7 @@ class GenerateVideoRequest(BaseModel):
     dream_id: UUID
     style: Optional[str] = "dreamlike"
     resolution: Optional[str] = "720P"
-    duration: Optional[int] = 5  # 秒数 2-15
+    duration: Optional[int] = 10  # 秒数 3-15
     ratio: Optional[str] = "16:9"
 
 

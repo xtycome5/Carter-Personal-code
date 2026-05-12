@@ -75,7 +75,7 @@ export default function RecordPage() {
       } else {
         await generateAPI.video(token!, {
           dream_id: dream.id,
-          duration: 5,
+          duration: 10,
           resolution: "720P",
         });
       }

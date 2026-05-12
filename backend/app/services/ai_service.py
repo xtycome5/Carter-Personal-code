@@ -107,7 +107,7 @@ class DashScopeService:
         prompt: str,
         negative_prompt: Optional[str] = None,
         resolution: str = "720P",
-        duration: int = 5,
+        duration: int = 10,
         ratio: str = "16:9",
     ) -> str:
         """
@@ -152,7 +152,7 @@ class DashScopeService:
         image_url: str,
         negative_prompt: Optional[str] = None,
         resolution: str = "720P",
-        duration: int = 5,
+        duration: int = 10,
         ratio: str = "16:9",
     ) -> str:
         """
@@ -198,7 +198,7 @@ class DashScopeService:
         reference_image_urls: list[str],
         negative_prompt: Optional[str] = None,
         resolution: str = "720P",
-        duration: int = 5,
+        duration: int = 10,
         ratio: str = "16:9",
     ) -> str:
         """
