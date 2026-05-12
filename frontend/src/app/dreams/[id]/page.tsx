@@ -10,7 +10,6 @@ import { dreamsAPI, generateAPI } from "@/lib/api";
 interface Generation {
   id: string;
   type: "image" | "video";
-  style?: string;
   status: string;
   result_url?: string;
   created_at: string;
@@ -21,7 +20,6 @@ interface Dream {
   title?: string;
   content: string;
   enhanced_content?: string;
-  mood?: string;
   tags: string[];
   created_at: string;
   generations: Generation[];
@@ -57,7 +55,7 @@ export default function DreamDetailPage() {
               next.delete(genId);
               return next;
             });
-            loadDream(); // Refresh dream data
+            loadDream();
           }
         } catch (err) {
           console.error("Poll error:", err);
@@ -72,7 +70,6 @@ export default function DreamDetailPage() {
     try {
       const result: any = await dreamsAPI.get(token!, dreamId);
       setDream(result);
-      // Check for processing generations
       const processingIds = result.generations
         .filter((g: Generation) => g.status === "processing")
         .map((g: Generation) => g.id);
@@ -86,17 +83,12 @@ export default function DreamDetailPage() {
     }
   };
 
-  const handleGenerateImage = async (style: string) => {
+  const handleGenerateImage = async () => {
     if (!dream) return;
     setGenerating("image");
     try {
-      // Enhance first if not already enhanced
-      if (!dream.enhanced_content) {
-        await generateAPI.enhance(token!, { dream_id: dream.id, style });
-      }
       const gen: any = await generateAPI.image(token!, {
         dream_id: dream.id,
-        style,
       });
       setPolling((prev) => new Set(prev).add(gen.id));
       loadDream();
@@ -107,16 +99,12 @@ export default function DreamDetailPage() {
     }
   };
 
-  const handleGenerateVideo = async (style: string) => {
+  const handleGenerateVideo = async () => {
     if (!dream) return;
     setGenerating("video");
     try {
-      if (!dream.enhanced_content) {
-        await generateAPI.enhance(token!, { dream_id: dream.id, style });
-      }
       const gen: any = await generateAPI.video(token!, {
         dream_id: dream.id,
-        style,
         duration: 5,
         resolution: "720P",
       });
@@ -162,11 +150,6 @@ export default function DreamDetailPage() {
             <h1 className="text-2xl font-bold text-white">
               {dream.title || "Untitled Dream"}
             </h1>
-            {dream.mood && (
-              <span className="px-3 py-1 rounded-full text-xs bg-[#6366f1]/10 text-[#818cf8] border border-[#6366f1]/20">
-                {dream.mood}
-              </span>
-            )}
           </div>
 
           <p className="text-[#c8d0dc] leading-relaxed mb-4">{dream.content}</p>
@@ -204,7 +187,7 @@ export default function DreamDetailPage() {
         {/* Generate Actions */}
         <div className="flex gap-4 mb-8">
           <button
-            onClick={() => handleGenerateImage("surreal")}
+            onClick={handleGenerateImage}
             disabled={generating !== null}
             className="dream-button flex items-center gap-2 disabled:opacity-50"
           >
@@ -216,7 +199,7 @@ export default function DreamDetailPage() {
             Generate Image
           </button>
           <button
-            onClick={() => handleGenerateVideo("dreamlike")}
+            onClick={handleGenerateVideo}
             disabled={generating !== null}
             className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#a855f7] to-[#ec4899] text-white font-semibold flex items-center gap-2 hover:shadow-lg transition-all disabled:opacity-50"
           >
@@ -270,7 +253,7 @@ export default function DreamDetailPage() {
                   )}
                   <div className="p-3">
                     <span className="text-xs text-[#64748b]">
-                      {gen.style} · {new Date(gen.created_at).toLocaleString("en-US", {
+                      {new Date(gen.created_at).toLocaleString("en-US", {
                         month: "short",
                         day: "numeric",
                         hour: "numeric",
@@ -316,7 +299,7 @@ export default function DreamDetailPage() {
                   )}
                   <div className="p-3">
                     <span className="text-xs text-[#64748b]">
-                      {gen.style} · {new Date(gen.created_at).toLocaleString("en-US", {
+                      {new Date(gen.created_at).toLocaleString("en-US", {
                         month: "short",
                         day: "numeric",
                         hour: "numeric",

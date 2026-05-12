@@ -3,29 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Sparkles, Moon, Wand2, Save, Image as ImageIcon, Video } from "lucide-react";
+import { Moon, Save, Image as ImageIcon, Video } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { dreamsAPI, generateAPI } from "@/lib/api";
-
-const MOODS = [
-  { id: "fantasy", label: "Fantasy", emoji: "✨" },
-  { id: "peaceful", label: "Peaceful", emoji: "🌙" },
-  { id: "scary", label: "Scary", emoji: "👻" },
-  { id: "sad", label: "Sad", emoji: "🌧️" },
-  { id: "exciting", label: "Exciting", emoji: "⚡" },
-  { id: "romantic", label: "Romantic", emoji: "💫" },
-  { id: "mysterious", label: "Mysterious", emoji: "🔮" },
-  { id: "nostalgic", label: "Nostalgic", emoji: "🍂" },
-];
-
-const STYLES = [
-  { id: "surreal", label: "Surrealism", desc: "Dalí-inspired dreamscapes" },
-  { id: "watercolor", label: "Watercolor", desc: "Soft, dreamy brush strokes" },
-  { id: "cyberpunk", label: "Cyberpunk", desc: "Neon lights & future cities" },
-  { id: "classical", label: "Classical", desc: "Renaissance oil painting" },
-  { id: "ghibli", label: "Ghibli", desc: "Warm animated world" },
-  { id: "gothic", label: "Dark Gothic", desc: "Moonlit mysteries" },
-];
 
 export default function RecordPage() {
   const { token } = useAuthStore();
@@ -33,10 +13,8 @@ export default function RecordPage() {
 
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
-  const [mood, setMood] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-  const [selectedStyle, setSelectedStyle] = useState("surreal");
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -64,7 +42,6 @@ export default function RecordPage() {
       const dream: any = await dreamsAPI.create(token!, {
         title: title || undefined,
         content,
-        mood: mood || undefined,
         tags,
       });
       router.push(`/dreams/${dream.id}`);
@@ -88,21 +65,16 @@ export default function RecordPage() {
       const dream: any = await dreamsAPI.create(token!, {
         title: title || undefined,
         content,
-        mood: mood || undefined,
         tags,
       });
 
       if (type === "image") {
-        // Generate image
         await generateAPI.image(token!, {
           dream_id: dream.id,
-          style: selectedStyle,
         });
       } else {
-        // Generate video (T2V since no image exists yet)
         await generateAPI.video(token!, {
           dream_id: dream.id,
-          style: selectedStyle,
           duration: 5,
           resolution: "720P",
         });
@@ -129,7 +101,7 @@ export default function RecordPage() {
             Record a Dream
           </h1>
           <p className="text-[#94a3b8]">
-            Describe your dream in as much detail as possible. AI will visualize it for you.
+            Describe your dream in as much detail as possible. AI will visualize it in surreal painterly style.
           </p>
         </div>
 
@@ -197,47 +169,19 @@ export default function RecordPage() {
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar - Actions Only */}
           <div className="space-y-6">
-            {/* Mood */}
+            {/* Art Style Info */}
             <div className="glass-card p-5">
-              <h3 className="text-sm font-medium text-white mb-3">Mood</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {MOODS.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => setMood(mood === m.id ? "" : m.id)}
-                    className={`px-3 py-2 rounded-lg text-xs transition-all ${
-                      mood === m.id
-                        ? "bg-[#6366f1]/20 border border-[#6366f1]/50 text-white"
-                        : "border border-[#2a2a5e] text-[#94a3b8] hover:border-[#6366f1]/30"
-                    }`}
-                  >
-                    {m.emoji} {m.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Style */}
-            <div className="glass-card p-5">
-              <h3 className="text-sm font-medium text-white mb-3">Art Style</h3>
-              <div className="space-y-2">
-                {STYLES.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setSelectedStyle(s.id)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${
-                      selectedStyle === s.id
-                        ? "bg-[#6366f1]/20 border border-[#6366f1]/50 text-white"
-                        : "border border-[#2a2a5e] text-[#94a3b8] hover:border-[#6366f1]/30"
-                    }`}
-                  >
-                    <div className="font-medium">{s.label}</div>
-                    <div className="text-[#64748b]">{s.desc}</div>
-                  </button>
-                ))}
-              </div>
+              <h3 className="text-sm font-medium text-white mb-2">Art Style</h3>
+              <p className="text-xs text-[#94a3b8] leading-relaxed">
+                All dreams are visualized in a surreal painterly style inspired by
+                <span className="text-[#a855f7]"> Dali</span>,
+                <span className="text-[#60a5fa]"> Chagall</span>,
+                <span className="text-[#34d399]"> Magritte</span> &
+                <span className="text-[#f97316]"> Munch</span> —
+                melting forms, jewel-toned light, hazy fog, and emotional color.
+              </p>
             </div>
 
             {/* Actions */}
