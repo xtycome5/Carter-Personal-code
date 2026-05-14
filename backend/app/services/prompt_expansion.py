@@ -1,18 +1,18 @@
 """
 Prompt Expansion Service - 提示词扩写服务
 
-以四位大师的艺术语言为基底，生成超现实梦境提示词：
-- 达利 — 融化的形态、扭曲的时空、精细渲染的不可能之物
-- 夏加尔 — 失重漂浮、宝石色调、诗意温柔的彩色玻璃光
-- 马格里特 — 不可能情境中的平静悖论、哲学性神秘
-- 蒙克 — 情绪扭曲现实、表现主义焦虑的色彩呐喊
+从 18 位梦境/超现实画家池中随机取 3 位作为美学基底，生成超现实梦境提示词。
+每次生图调用都会随机组合，产出风格多变但始终保持超现实梦境质感。
 
 美学原则：超现实（非现实照片）、朦胧（面纱般的雾气边缘）、情绪充盈（光色形服务于感受）
 
 视频提示词策略：
 用具体的摄影/电影语言替代空泛形容词，让 HappyHorse 模型呈现可控、可复现的画面。
+
+画家池将来可通过后台管理系统增减配置。
 """
 import logging
+import random
 import httpx
 from typing import Optional, Literal
 from app.core.config import settings
@@ -21,15 +21,51 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# IMAGE System Prompt - 四大师美学基底（保持不变）
+# ARTIST POOL - 梦境画家池（未来可通过后台增减）
 # ============================================================
 
-DREAM_IMAGE_SYSTEM_PROMPT = """You are a surreal dream image prompt writer. Your aesthetic foundation comes from four masters:
+ARTIST_POOL = [
+    # 超现实主义核心
+    {"key": "DALI", "name": "Salvador Dalí", "style": "melting forms, warped time-space, impossibly detailed renderings of impossible things, soft clocks dripping"},
+    {"key": "MAGRITTE", "name": "René Magritte", "style": "calm paradoxes in impossible situations, philosophical mystery, uncanny stillness, objects defying logic"},
+    {"key": "ERNST", "name": "Max Ernst", "style": "collage textures, organic alien forms, jungle-like otherworlds, frottage surfaces, biomorphic strangeness"},
+    {"key": "VARO", "name": "Remedios Varo", "style": "alchemical machinery, spiral architecture, feminine mysticism, mechanical dreamscapes, intricate vessels"},
+    {"key": "CARRINGTON", "name": "Leonora Carrington", "style": "magical creatures, Celtic mythology, alchemical dreamscapes, hybrid beings, enchanted interiors"},
+    # 表现主义/情绪扭曲
+    {"key": "MUNCH", "name": "Edvard Munch", "style": "emotions distorting reality, expressionist anxiety screaming through color, undulating forms, raw psychic energy"},
+    {"key": "SCHIELE", "name": "Egon Schiele", "style": "twisted bodies, raw emotional linework, exposed vulnerability, angular tension, nervous energy"},
+    {"key": "BACON", "name": "Francis Bacon", "style": "distorted flesh, caged screaming forms, violent blurring, visceral smeared humanity, existential horror"},
+    # 诗意梦幻/失重
+    {"key": "CHAGALL", "name": "Marc Chagall", "style": "weightless floating, jewel-tone colors, poetic tenderness bathed in stained-glass light, lovers drifting above villages"},
+    {"key": "REDON", "name": "Odilon Redon", "style": "pastel dreamscapes, floating eyeballs, faces emerging from flowers, luminous color fields, soft numinous forms"},
+    {"key": "KLIMT", "name": "Gustav Klimt", "style": "gold-leaf ornamentation, erotic patterning, Byzantine dream surfaces, mosaic-like skin, decorative ecstasy"},
+    {"key": "MUCHA", "name": "Alphonse Mucha", "style": "Art Nouveau flowing lines, floral halos, soft luminous glow, ornamental feminine silhouettes, circular compositions"},
+    # 神秘/象征主义
+    {"key": "BOSCH", "name": "Hieronymus Bosch", "style": "hellish fantasy, densely packed creatures, medieval nightmare imagery, bizarre hybrid beings, teeming surreal detail"},
+    {"key": "BLAKE", "name": "William Blake", "style": "divine visions, muscular angels, cosmic radiance, prophetic illumination, spiritual enormity"},
+    {"key": "BEKSINSKI", "name": "Zdzisław Beksiński", "style": "bone-like architecture, apocalyptic wastelands, organic horror beauty, skeletal cathedrals, amber decay"},
+    # 现代梦境/数字感
+    {"key": "KUSAMA", "name": "Yayoi Kusama", "style": "infinite polka dots, mirrored infinity rooms, cosmic endless repetition, obsessive patterning, dissolving self into universe"},
+    {"key": "DE_CHIRICO", "name": "Giorgio de Chirico", "style": "metaphysical empty plazas, long impossible shadows, architectural unease, melancholic stillness, enigmatic mannequins"},
+    {"key": "SAGE", "name": "Kay Sage", "style": "desolate geometric dreamscapes, draped architectural forms, grey-toned silence, angular fabric structures, lonely horizons"},
+]
 
-- DALI: melting forms, warped time-space, impossibly detailed renderings of impossible things
-- CHAGALL: weightless floating, jewel-tone colors, poetic tenderness bathed in stained-glass light
-- MAGRITTE: calm paradoxes in impossible situations, philosophical mystery, uncanny stillness
-- MUNCH: emotions distorting reality, expressionist anxiety screaming through color and form
+
+def _pick_artists(n: int = 3) -> list[dict]:
+    """从画家池随机取 n 位"""
+    return random.sample(ARTIST_POOL, min(n, len(ARTIST_POOL)))
+
+
+def _build_image_system_prompt(artists: list[dict]) -> str:
+    """根据选中的画家动态生成图片 System Prompt"""
+    artist_lines = "\n".join(
+        f"- {a['key']}: {a['style']}" for a in artists
+    )
+    artist_names = ", ".join(a['key'] for a in artists)
+
+    return f"""You are a surreal dream image prompt writer. Your aesthetic foundation comes from these masters:
+
+{artist_lines}
 
 ## AESTHETIC PRINCIPLES (non-negotiable):
 1. SURREAL — never photorealistic. Reality is bent, melted, floating, paradoxical.
@@ -38,7 +74,7 @@ DREAM_IMAGE_SYSTEM_PROMPT = """You are a surreal dream image prompt writer. Your
 
 ## RULES:
 - Output under 80 words. Short, dense, evocative.
-- Blend 2-3 masters' languages together — never pure imitation of one.
+- Blend the {len(artists)} masters' ({artist_names}) languages together — never pure imitation of one.
 - Describe the FEELING and ATMOSPHERE more than objects.
 - Objects should be partially dissolved, melting, floating, or paradoxically placed.
 - Use painterly language: "bleeding colors", "molten edges", "stained-glass glow", "warped horizon", "expressionist streaks".
@@ -189,11 +225,12 @@ class PromptExpansionService:
                 return "zh"
         return "en"
 
-    def _get_system_prompt(self, gen_type: Literal["image", "video"]) -> str:
-        """根据生成类型选择 System Prompt"""
+    def _get_system_prompt(self, gen_type: Literal["image", "video"]) -> tuple[str, list[dict]]:
+        """根据生成类型选择 System Prompt，返回 (prompt, selected_artists)"""
         if gen_type == "video":
-            return DREAM_VIDEO_SYSTEM_PROMPT
-        return DREAM_IMAGE_SYSTEM_PROMPT
+            return DREAM_VIDEO_SYSTEM_PROMPT, []
+        artists = _pick_artists(3)
+        return _build_image_system_prompt(artists), artists
 
     def _get_model(self, gen_type: Literal["image", "video"]) -> str:
         """根据生成类型选择 LLM 模型"""
@@ -242,8 +279,13 @@ class PromptExpansionService:
             扩写后的完整 prompt
         """
         lang = self._detect_language(content)
-        system_prompt = self._get_system_prompt(gen_type)
+        system_prompt, artists = self._get_system_prompt(gen_type)
         model = self._get_model(gen_type)
+
+        # 日志记录选中的画家
+        if artists:
+            artist_keys = [a['key'] for a in artists]
+            logger.info(f"[PromptExpansion] Selected artists: {artist_keys}")
 
         # 构建用户消息
         if lang == "zh":
