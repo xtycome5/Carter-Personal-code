@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Moon, Save, Image as ImageIcon, Video } from "lucide-react";
+import { Moon, Save, Image as ImageIcon } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { dreamsAPI, generateAPI } from "@/lib/api";
 
@@ -52,13 +52,13 @@ export default function RecordPage() {
     }
   };
 
-  const handleSaveAndGenerate = async (type: "image" | "video") => {
+  const handleSaveAndGenerate = async () => {
     if (!content.trim()) {
       setError("Please describe your dream");
       return;
     }
     setError("");
-    setGenerating(type);
+    setGenerating("image");
 
     try {
       // Save dream first
@@ -68,17 +68,9 @@ export default function RecordPage() {
         tags,
       });
 
-      if (type === "image") {
-        await generateAPI.image(token!, {
-          dream_id: dream.id,
-        });
-      } else {
-        await generateAPI.video(token!, {
-          dream_id: dream.id,
-          duration: 10,
-          resolution: "720P",
-        });
-      }
+      await generateAPI.image(token!, {
+        dream_id: dream.id,
+      });
 
       router.push(`/dreams/${dream.id}`);
     } catch (err: any) {
@@ -191,7 +183,7 @@ export default function RecordPage() {
               )}
 
               <button
-                onClick={() => handleSaveAndGenerate("image")}
+                onClick={handleSaveAndGenerate}
                 disabled={generating !== null || saving}
                 className="dream-button w-full flex items-center justify-center gap-2 disabled:opacity-50"
               >
@@ -204,24 +196,6 @@ export default function RecordPage() {
                   <>
                     <ImageIcon className="w-4 h-4" />
                     Save & Generate Image
-                  </>
-                )}
-              </button>
-
-              <button
-                onClick={() => handleSaveAndGenerate("video")}
-                disabled={generating !== null || saving}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#a855f7] to-[#ec4899] text-white font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all disabled:opacity-50"
-              >
-                {generating === "video" ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Generating Video...
-                  </>
-                ) : (
-                  <>
-                    <Video className="w-4 h-4" />
-                    Save & Generate Video
                   </>
                 )}
               </button>

@@ -195,6 +195,13 @@ async def generate_video(
         existing_image = image_result.scalar_one_or_none()
         use_i2v = existing_image and existing_image.result_url
 
+        # 必须有参考图才能生成视频（纯 R2V 流程）
+        if not use_i2v:
+            raise HTTPException(
+                status_code=400,
+                detail="Please generate an image first. Video generation requires a reference image."
+            )
+
         # ===== Step 2: Prompt Expansion（视频专用扩写）=====
         expanded_prompt = await dashscope_service.expand_prompt(
             content=dream.content,
@@ -207,28 +214,16 @@ async def generate_video(
         dream.enhanced_content = expanded_prompt
         await db.flush()
 
-        # ===== Step 3: 提交视频生成任务（R2V 或 T2V）=====
-        if use_i2v:
-            # 有参考图 → 参考生视频 (R2V)，以图片为风格/主体参考
-            task_id = await dashscope_service.generate_video_from_reference(
-                prompt=expanded_prompt,
-                reference_image_urls=[existing_image.result_url],
-                negative_prompt=_get_default_negative_prompt(),
-                resolution=data.resolution,
-                duration=data.duration,
-                ratio=data.ratio,
-            )
-            gen_mode = "r2v"
-        else:
-            # 无参考图 → 文生视频
-            task_id = await dashscope_service.generate_video(
-                prompt=expanded_prompt,
-                negative_prompt=_get_default_negative_prompt(),
-                resolution=data.resolution,
-                duration=data.duration,
-                ratio=data.ratio,
-            )
-            gen_mode = "t2v"
+        # ===== Step 3: 提交视频生成任务（R2V — 参考生视频）=====
+        task_id = await dashscope_service.generate_video_from_reference(
+            prompt=expanded_prompt,
+            reference_image_urls=[existing_image.result_url],
+            negative_prompt=_get_default_negative_prompt(),
+            resolution=data.resolution,
+            duration=data.duration,
+            ratio=data.ratio,
+        )
+        gen_mode = "r2v"
 
         # ===== Step 4: 保存生成记录 =====
         generation = Generation(

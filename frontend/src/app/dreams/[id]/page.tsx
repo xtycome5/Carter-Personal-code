@@ -196,20 +196,22 @@ export default function DreamDetailPage() {
             ) : (
               <ImageIcon className="w-4 h-4" />
             )}
-            Generate Image
+            Regenerate Image
           </button>
-          <button
-            onClick={handleGenerateVideo}
-            disabled={generating !== null}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#a855f7] to-[#ec4899] text-white font-semibold flex items-center gap-2 hover:shadow-lg transition-all disabled:opacity-50"
-          >
-            {generating === "video" ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <Video className="w-4 h-4" />
-            )}
-            {hasCompletedImage ? "Generate Video (Reference)" : "Generate Video"}
-          </button>
+          {hasCompletedImage && (
+            <button
+              onClick={handleGenerateVideo}
+              disabled={generating !== null}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#a855f7] to-[#ec4899] text-white font-semibold flex items-center gap-2 hover:shadow-lg transition-all disabled:opacity-50"
+            >
+              {generating === "video" ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Video className="w-4 h-4" />
+              )}
+              Generate Video
+            </button>
+          )}
         </div>
 
         {/* Generated Images */}
