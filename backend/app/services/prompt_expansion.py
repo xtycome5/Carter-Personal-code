@@ -111,9 +111,11 @@ IMPORTANT CONTEXT: The video will be generated FROM A REFERENCE IMAGE. The refer
 
 ### 1. FPV (First-Person View) Camera — NON-NEGOTIABLE
 - The camera IS the dreamer's eyes. We never see a human subject from outside.
-- Use FPV language: "camera drifts forward as if walking through", "POV looking down at own hands", "first-person perspective floating above", "camera turns head slowly to reveal"
-- This avoids gender/appearance issues entirely — viewer IS the dreamer.
-- Allowed camera motions for FPV: slow drift forward, gentle head-turn pan, looking up/down tilt, floating rise/descent, smooth FPV walk-through
+- NO HANDS, NO ARMS, NO BODY PARTS visible in frame — ever. The viewer is a disembodied floating consciousness, not a physical body.
+- Use FPV language: "camera drifts forward as if floating through", "disembodied POV gazing down", "first-person perspective floating above", "camera turns slowly to reveal"
+- NEVER use: "looking at own hands", "arms reaching", "fingers touching" or any body-part visibility.
+- This avoids gender/appearance issues entirely — viewer IS a disembodied dreaming consciousness.
+- Allowed camera motions for FPV: slow drift forward, gentle head-turn pan, looking up/down tilt, floating rise/descent, smooth gliding walk-through
 
 ### 2. REUSE REFERENCE IMAGE ELEMENTS — NON-NEGOTIABLE
 - The reference image contains specific surreal objects, colors, textures, and compositions.
@@ -132,9 +134,9 @@ IMPORTANT CONTEXT: The video will be generated FROM A REFERENCE IMAGE. The refer
 ### Camera (FPV only):
 - "FPV slow drift forward through the scene at 0.3m/s"
 - "first-person gaze panning 45° left, revealing more of the painted landscape"
-- "POV floating upward 2m, looking down as elements below shift and melt"
-- "handheld FPV micro-drift with subtle breathing motion"
-- "FPV walking into depth of the scene, parallax on foreground elements"
+- "disembodied POV floating upward 2m, looking down as elements below shift and melt"
+- "gentle FPV micro-drift with subtle floating motion"
+- "FPV gliding into depth of the scene, parallax on foreground elements"
 
 ### Motion of Scene Elements:
 - "foreground painted objects drift laterally at 0.1m/s"
@@ -162,11 +164,12 @@ IMPORTANT CONTEXT: The video will be generated FROM A REFERENCE IMAGE. The refer
 ## CRITICAL RULES:
 1. Output 80-120 words. Dense, precise, all technical.
 2. ALWAYS FPV. Never describe a third-person character. The viewer IS inside the dream.
-3. ALWAYS reference "existing scene elements" / "painted forms" / "the composition" — because a reference image exists.
-4. NEVER introduce entirely new subjects not implied by the dream description.
-5. Keep the painterly/surreal quality — this is an animated painting, not a 3D film.
-6. ONE continuous 10-second take. No cuts.
-7. English only.
+3. NEVER show hands, arms, fingers, legs, feet, or any body parts in frame. The camera is a disembodied floating eye.
+4. ALWAYS reference "existing scene elements" / "painted forms" / "the composition" — because a reference image exists.
+5. NEVER introduce entirely new subjects not implied by the dream description.
+6. Keep the painterly/surreal quality — this is an animated painting, not a 3D film.
+7. ONE continuous 10-second take. No cuts.
+8. English only.
 
 ## Examples:
 

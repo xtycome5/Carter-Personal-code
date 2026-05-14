@@ -210,9 +210,9 @@ async def generate_video(
             mood=dream.mood,
         )
 
-        # 保存扩写结果
-        dream.enhanced_content = expanded_prompt
-        await db.flush()
+        # 注意：不覆写 dream.enhanced_content
+        # enhanced_content 只存图片 prompt（用于前端展示"AI扩写描述"）
+        # 视频 prompt 存在 generation.prompt 字段中
 
         # ===== Step 3: 提交视频生成任务（R2V — 参考生视频）=====
         task_id = await dashscope_service.generate_video_from_reference(
