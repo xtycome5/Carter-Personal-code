@@ -67,16 +67,17 @@ class DashScopeService:
         self,
         prompt: str,
         negative_prompt: Optional[str] = None,
-        size: str = "1024*1024",
+        size: str = "2048*2048",
         n: int = 1,
     ) -> str:
         """
         异步提交图片生成任务，返回 task_id
         注意：传入的 prompt 应该是已经过 expand_prompt() 扩写后的
+        使用 qwen-image-2.0-pro, 支持尺寸: 2048*2048, 2688*1536, 1536*2688 等
         """
-        url = f"{self.base_url}/api/v1/services/aigc/image-generation/generation"
+        url = f"{self.base_url}/api/v1/services/aigc/multimodal-generation/generation"
         
-        # wan2.7-image 使用 messages 格式
+        # qwen-image-2.0-pro 使用 messages 格式
         content = [{"text": prompt}]
         
         payload = {
