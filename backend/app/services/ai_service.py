@@ -71,9 +71,9 @@ class DashScopeService:
         n: int = 1,
     ) -> str:
         """
-        异步提交图片生成任务，返回 task_id
-        注意：传入的 prompt 应该是已经过 expand_prompt() 扩写后的
-        使用 qwen-image-2.0-pro, 支持尺寸: 2048*2048, 2688*1536, 1536*2688 等
+        同步调用 qwen-image-2.0-pro 生成图片，直接返回图片 URL
+        注意：qwen-image-2.0-pro 不支持异步模式，调用会阻塞直到生成完成（通常 10-30s）
+        支持尺寸: 2048*2048, 2688*1536, 1536*2688, 2368*1728, 1728*2368
         """
         url = f"{self.base_url}/api/v1/services/aigc/multimodal-generation/generation"
         
@@ -99,20 +99,25 @@ class DashScopeService:
         if negative_prompt:
             payload["parameters"]["negative_prompt"] = negative_prompt
 
-        headers = {
-            **self.headers,
-            "X-DashScope-Async": "enable",
-        }
+        # qwen-image-2.0-pro 是同步接口，不需要 X-DashScope-Async header
+        logger.info(f"[T2I] POST {url} | model={payload['model']} | size={size} | prompt={prompt[:80]}...")
 
-        logger.info(f"[T2I] POST {url} | model={payload['model']} | prompt={prompt[:80]}...")
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, json=payload, headers=headers)
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(url, json=payload, headers=self.headers)
             response.raise_for_status()
             data = response.json()
-            task_id = data["output"]["task_id"]
-            logger.info(f"[T2I] task_id={task_id}")
-            return task_id
+            
+            # 同步返回格式: output.choices[0].message.content[0].image
+            choices = data.get("output", {}).get("choices", [])
+            if choices:
+                msg_content = choices[0].get("message", {}).get("content", [])
+                for item in msg_content:
+                    if "image" in item:
+                        image_url = item["image"]
+                        logger.info(f"[T2I] SUCCESS | image_url={image_url[:80]}...")
+                        return image_url
+            
+            raise Exception(f"Unexpected response format: {data}")
 
     async def generate_video(
         self,

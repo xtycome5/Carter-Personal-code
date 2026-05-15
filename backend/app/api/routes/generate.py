@@ -114,8 +114,7 @@ async def generate_image(
 
         # ===== Step 3: 提交图片生成任务 =====
         if use_reference:
-            # 有视频 → 用视频 URL 作为参考生图 (wan2.7-image-pro)
-            # 直接传视频URL作为参考图，模型会自动提取帧
+            # 有视频 → 用视频 URL 作为参考生图 (wan2.7-image-pro, 异步)
             task_id = await dashscope_service.generate_image_from_reference(
                 prompt=expanded_prompt,
                 reference_image_url=existing_video.result_url,
@@ -124,9 +123,28 @@ async def generate_image(
                 n=data.count,
             )
             gen_mode = "v2i"
+
+            # v2i 是异步模式，保存 task_id，前端轮询状态
+            generation = Generation(
+                dream_id=dream.id,
+                user_id=UUID(user_id),
+                type="image",
+                style=data.style,
+                prompt=expanded_prompt,
+                negative_prompt=data.negative_prompt,
+                status="processing",
+                task_id=task_id,
+                metadata_json={
+                    "size": data.size,
+                    "count": data.count,
+                    "mode": gen_mode,
+                    "reference_video": existing_video.result_url,
+                    "original_content": dream.content,
+                },
+            )
         else:
-            # 无视频 → 纯文生图 (wan2.7-image)
-            task_id = await dashscope_service.generate_image(
+            # 无视频 → 纯文生图 (qwen-image-2.0-pro, 同步直接返回 URL)
+            image_url = await dashscope_service.generate_image(
                 prompt=expanded_prompt,
                 negative_prompt=data.negative_prompt or _get_default_negative_prompt(),
                 size=data.size,
@@ -134,24 +152,32 @@ async def generate_image(
             )
             gen_mode = "t2i"
 
+            # 同步模式：图片已生成，直接持久化到 OSS
+            permanent_url = await oss_storage_service.persist(
+                temp_url=image_url,
+                user_id=user_id,
+                generation_id=None,  # 还没有 generation ID，先持久化
+                media_type="image",
+            )
+
+            generation = Generation(
+                dream_id=dream.id,
+                user_id=UUID(user_id),
+                type="image",
+                style=data.style,
+                prompt=expanded_prompt,
+                negative_prompt=data.negative_prompt,
+                status="completed",
+                result_url=permanent_url or image_url,
+                metadata_json={
+                    "size": data.size,
+                    "count": data.count,
+                    "mode": gen_mode,
+                    "original_content": dream.content,
+                },
+            )
+
         # ===== Step 4: 保存生成记录 =====
-        generation = Generation(
-            dream_id=dream.id,
-            user_id=UUID(user_id),
-            type="image",
-            style=data.style,
-            prompt=expanded_prompt,
-            negative_prompt=data.negative_prompt,
-            status="processing",
-            task_id=task_id,
-            metadata_json={
-                "size": data.size,
-                "count": data.count,
-                "mode": gen_mode,
-                "reference_video": existing_video.result_url if use_reference else None,
-                "original_content": dream.content,
-            },
-        )
         db.add(generation)
         await db.commit()
         await db.refresh(generation)
