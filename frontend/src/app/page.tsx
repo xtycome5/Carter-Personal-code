@@ -10,11 +10,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!isLoading) {
-      if (user) {
-        router.replace("/create");
-      } else {
-        router.replace("/auth");
-      }
+      router.replace("/create");
     }
   }, [user, isLoading, router]);
 

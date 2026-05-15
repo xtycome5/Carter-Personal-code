@@ -8,13 +8,22 @@ import { useAuthStore } from "@/stores/authStore";
 import { dreamsAPI, generateAPI } from "@/lib/api";
 
 export default function CreatePage() {
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
   const router = useRouter();
 
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
+
+  // Redirect to auth when unauthenticated user tries to interact
+  const requireAuth = () => {
+    if (!user) {
+      router.push("/auth");
+      return true;
+    }
+    return false;
+  };
 
   const handleGenerate = async () => {
     if (!content.trim()) {
@@ -97,6 +106,7 @@ export default function CreatePage() {
                 placeholder="Dream title (optional)"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                onFocus={() => requireAuth()}
                 className="w-full bg-transparent border-none text-[var(--text-primary)] text-sm placeholder:text-[var(--text-muted)] focus:outline-none mb-3 font-medium"
               />
 
@@ -104,6 +114,7 @@ export default function CreatePage() {
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                onFocus={() => requireAuth()}
                 placeholder="Describe your dream in detail... What did you see? What happened? How did it feel?"
                 rows={4}
                 className="w-full bg-transparent border-none text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none resize-none text-[15px] leading-relaxed"

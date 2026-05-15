@@ -137,6 +137,9 @@ export default function DreamDetailPage() {
   const images = dream.generations.filter((g) => g.type === "image");
   const videos = dream.generations.filter((g) => g.type === "video");
   const hasCompletedImage = images.some((g) => g.status === "completed" && g.result_url);
+  const hasAnyVideo = videos.length > 0;
+  // Show video CTA when image is done but no video has been generated yet
+  const showVideoCTA = hasCompletedImage && !hasAnyVideo;
 
   return (
     <div className="main-content min-h-screen px-8 py-8">
@@ -239,6 +242,34 @@ export default function DreamDetailPage() {
                     </div>
                   ))}
                 </div>
+
+                {/* Video generation CTA inline */}
+                {showVideoCTA && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="mt-4 p-4 rounded-xl border border-[var(--accent)] bg-[rgba(124,92,252,0.06)] flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#7c5cfc] to-[#c084fc] flex items-center justify-center">
+                        <Video className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[var(--text-primary)]">Next step: Animate your dream</p>
+                        <p className="text-xs text-[var(--text-muted)]">Turn this painting into a 10-second cinematic video</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleGenerateVideo}
+                      disabled={generating !== null}
+                      className="btn-primary !py-2 !px-4 !text-xs flex items-center gap-1.5 whitespace-nowrap disabled:opacity-40"
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      Generate Video
+                    </button>
+                  </motion.div>
+                )}
               </div>
             )}
 
@@ -296,20 +327,35 @@ export default function DreamDetailPage() {
                 </button>
 
                 {hasCompletedImage && (
-                  <button
-                    onClick={handleGenerateVideo}
-                    disabled={generating !== null}
-                    className="btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-40"
-                  >
-                    {generating === "video" ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Video className="w-4 h-4" />
+                  <div className="relative">
+                    {showVideoCTA && (
+                      <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-[#7c5cfc] to-[#c084fc] opacity-60 blur-sm animate-pulse" />
                     )}
-                    Generate Video
-                  </button>
+                    <button
+                      onClick={handleGenerateVideo}
+                      disabled={generating !== null}
+                      className={`relative w-full flex items-center justify-center gap-2 disabled:opacity-40 ${
+                        showVideoCTA
+                          ? "btn-primary !bg-gradient-to-r !from-[#7c5cfc] !to-[#c084fc]"
+                          : "btn-secondary"
+                      }`}
+                    >
+                      {generating === "video" ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Video className="w-4 h-4" />
+                      )}
+                      {showVideoCTA ? "Bring it to Life — Generate Video" : "Generate Video"}
+                    </button>
+                  </div>
                 )}
               </div>
+
+              {showVideoCTA && (
+                <p className="text-xs text-[var(--accent)] mt-3 text-center animate-pulse">
+                  Your painting is ready! Turn it into a cinematic video
+                </p>
+              )}
 
               {!hasCompletedImage && (
                 <p className="text-[10px] text-[var(--text-muted)] mt-3">

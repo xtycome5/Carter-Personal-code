@@ -4,7 +4,8 @@ import { useEffect, ReactNode } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter, usePathname } from "next/navigation";
 
-const publicPaths = ["/", "/auth"];
+// Pages accessible without login
+const publicPaths = ["/", "/auth", "/create", "/explore"];
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const { loadFromStorage, isLoading, user } = useAuthStore();
