@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ConfigProvider, theme } from 'antd';
 import AdminLayout from './layouts/AdminLayout';
 import DashboardPage from './pages/Dashboard';
@@ -22,13 +22,22 @@ const darkTheme = {
   },
 };
 
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const token = localStorage.getItem('admin_token');
+  if (!token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <ConfigProvider theme={darkTheme}>
       <BrowserRouter basename="/admin">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<AdminLayout />}>
+          <Route path="/" element={<RequireAuth><AdminLayout /></RequireAuth>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="artists" element={<ArtistPoolPage />} />
