@@ -35,7 +35,8 @@ export default function DreamsPage() {
   const loadDreams = async () => {
     try {
       const result: any = await dreamsAPI.list(token!, 1, 50);
-      setDreams(result.dreams || result.items || result);
+      const list = result.dreams || result.items || result;
+      setDreams(Array.isArray(list) ? list : []);
     } catch (err) {
       console.error("Failed to load dreams:", err);
     } finally {

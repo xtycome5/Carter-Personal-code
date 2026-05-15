@@ -153,160 +153,190 @@ export default function DreamDetailPage() {
           Back to Dreams
         </Link>
 
-        <div className="grid lg:grid-cols-[1fr_320px] gap-8">
-          {/* Main content */}
-          <div>
-            {/* Dream text */}
+        {/* ===== TOP: Media (Images + Videos) ===== */}
+        <div className="mb-8">
+          {/* Images */}
+          {images.length > 0 && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="card p-6 mb-6"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6"
             >
-              <h1 className="text-xl font-bold text-[var(--text-primary)] mb-3">
-                {dream.title || "Untitled Dream"}
-              </h1>
-              <p className="text-[var(--text-secondary)] leading-relaxed text-[15px]">
-                {dream.content}
-              </p>
-
-              {dream.enhanced_content && (
-                <div className="mt-5 p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
-                  <p className="text-xs text-[var(--accent)] mb-2 flex items-center gap-1.5 font-medium">
-                    <Wand2 className="w-3 h-3" /> AI Creative Brief
-                  </p>
-                  <p className="text-sm text-[var(--text-muted)] italic leading-relaxed">
-                    {dream.enhanced_content}
-                  </p>
-                </div>
-              )}
-
-              <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[var(--border-subtle)]">
-                <span className="text-xs text-[var(--text-muted)]">
-                  {new Date(dream.created_at).toLocaleString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </span>
-                {dream.tags?.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-0.5 rounded-md text-[10px] bg-[var(--accent-glow)] text-[var(--accent)]"
-                  >
-                    {tag}
-                  </span>
+              <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" /> Images
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {images.map((gen) => (
+                  <div key={gen.id} className="card overflow-hidden">
+                    {gen.status === "completed" && gen.result_url ? (
+                      <div className="relative group">
+                        <img
+                          src={gen.result_url}
+                          alt="Dream visualization"
+                          className="w-full aspect-square object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <a
+                            href={gen.result_url}
+                            target="_blank"
+                            className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                          >
+                            <Download className="w-5 h-5 text-white" />
+                          </a>
+                        </div>
+                      </div>
+                    ) : gen.status === "processing" ? (
+                      <div className="aspect-square flex items-center justify-center bg-[var(--bg-elevated)]">
+                        <div className="text-center">
+                          <RefreshCw className="w-6 h-6 text-[var(--accent)] animate-spin mx-auto mb-2" />
+                          <p className="text-xs text-[var(--text-muted)]">Painting your dream...</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="aspect-square flex items-center justify-center bg-[var(--bg-elevated)]">
+                        <p className="text-xs text-red-400">Failed</p>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             </motion.div>
+          )}
 
-            {/* Generated Images */}
-            {images.length > 0 && (
-              <div className="mb-6">
-                <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4" /> Images
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {images.map((gen) => (
-                    <div key={gen.id} className="card overflow-hidden">
-                      {gen.status === "completed" && gen.result_url ? (
-                        <div className="relative group">
-                          <img
-                            src={gen.result_url}
-                            alt="Dream visualization"
-                            className="w-full aspect-square object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <a
-                              href={gen.result_url}
-                              target="_blank"
-                              className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-                            >
-                              <Download className="w-5 h-5 text-white" />
-                            </a>
-                          </div>
+          {/* Videos */}
+          {videos.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2">
+                <Video className="w-4 h-4" /> Videos
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {videos.map((gen) => (
+                  <div key={gen.id} className="card overflow-hidden">
+                    {gen.status === "completed" && gen.result_url ? (
+                      <video
+                        src={gen.result_url}
+                        controls
+                        className="w-full aspect-video"
+                      />
+                    ) : gen.status === "processing" ? (
+                      <div className="aspect-video flex items-center justify-center bg-[var(--bg-elevated)]">
+                        <div className="text-center">
+                          <RefreshCw className="w-6 h-6 text-[var(--accent)] animate-spin mx-auto mb-2" />
+                          <p className="text-xs text-[var(--text-muted)]">Generating video...</p>
+                          <p className="text-[10px] text-[var(--text-muted)] mt-1">~2-3 minutes</p>
                         </div>
-                      ) : gen.status === "processing" ? (
-                        <div className="aspect-square flex items-center justify-center bg-[var(--bg-elevated)]">
-                          <div className="text-center">
-                            <RefreshCw className="w-6 h-6 text-[var(--accent)] animate-spin mx-auto mb-2" />
-                            <p className="text-xs text-[var(--text-muted)]">Painting your dream...</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="aspect-square flex items-center justify-center bg-[var(--bg-elevated)]">
-                          <p className="text-xs text-red-400">Failed</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    ) : (
+                      <div className="aspect-video flex items-center justify-center bg-[var(--bg-elevated)]">
+                        <p className="text-xs text-red-400">Failed</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Video generation CTA */}
+          {showVideoCTA && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-4 p-4 rounded-xl border border-[var(--accent)] bg-[rgba(124,92,252,0.06)] flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#7c5cfc] to-[#c084fc] flex items-center justify-center">
+                  <Video className="w-4 h-4 text-white" />
                 </div>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">Next step: Animate your dream</p>
+                  <p className="text-xs text-[var(--text-muted)]">Turn this painting into a 10-second cinematic video</p>
+                </div>
+              </div>
+              <button
+                onClick={handleGenerateVideo}
+                disabled={generating !== null}
+                className="btn-primary !py-2 !px-4 !text-xs flex items-center gap-1.5 whitespace-nowrap disabled:opacity-40"
+              >
+                <Video className="w-3.5 h-3.5" />
+                Generate Video
+              </button>
+            </motion.div>
+          )}
 
-                {/* Video generation CTA inline */}
-                {showVideoCTA && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="mt-4 p-4 rounded-xl border border-[var(--accent)] bg-[rgba(124,92,252,0.06)] flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#7c5cfc] to-[#c084fc] flex items-center justify-center">
-                        <Video className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-[var(--text-primary)]">Next step: Animate your dream</p>
-                        <p className="text-xs text-[var(--text-muted)]">Turn this painting into a 10-second cinematic video</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleGenerateVideo}
-                      disabled={generating !== null}
-                      className="btn-primary !py-2 !px-4 !text-xs flex items-center gap-1.5 whitespace-nowrap disabled:opacity-40"
-                    >
-                      <Video className="w-3.5 h-3.5" />
-                      Generate Video
-                    </button>
-                  </motion.div>
+          {/* No media yet placeholder */}
+          {images.length === 0 && videos.length === 0 && (
+            <div className="card p-12 flex flex-col items-center justify-center text-center">
+              <ImageIcon className="w-10 h-10 text-[var(--text-muted)] mb-3" />
+              <p className="text-sm text-[var(--text-muted)]">No images or videos yet</p>
+              <button
+                onClick={handleGenerateImage}
+                disabled={generating !== null}
+                className="btn-primary mt-4 flex items-center gap-2 disabled:opacity-40"
+              >
+                {generating === "image" ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Wand2 className="w-4 h-4" />
                 )}
+                Generate Image
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ===== BOTTOM: User Input + Prompts + Actions ===== */}
+        <div className="grid lg:grid-cols-[1fr_320px] gap-8">
+          {/* Dream text + enhanced content */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="card p-6"
+          >
+            <h1 className="text-xl font-bold text-[var(--text-primary)] mb-3">
+              {dream.title || "Untitled Dream"}
+            </h1>
+            <p className="text-[var(--text-secondary)] leading-relaxed text-[15px]">
+              {dream.content}
+            </p>
+
+            {dream.enhanced_content && (
+              <div className="mt-5 p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+                <p className="text-xs text-[var(--accent)] mb-2 flex items-center gap-1.5 font-medium">
+                  <Wand2 className="w-3 h-3" /> AI Creative Brief
+                </p>
+                <p className="text-sm text-[var(--text-muted)] italic leading-relaxed">
+                  {dream.enhanced_content}
+                </p>
               </div>
             )}
 
-            {/* Generated Videos */}
-            {videos.length > 0 && (
-              <div>
-                <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                  <Video className="w-4 h-4" /> Videos
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {videos.map((gen) => (
-                    <div key={gen.id} className="card overflow-hidden">
-                      {gen.status === "completed" && gen.result_url ? (
-                        <video
-                          src={gen.result_url}
-                          controls
-                          className="w-full aspect-video"
-                        />
-                      ) : gen.status === "processing" ? (
-                        <div className="aspect-video flex items-center justify-center bg-[var(--bg-elevated)]">
-                          <div className="text-center">
-                            <RefreshCw className="w-6 h-6 text-[var(--accent)] animate-spin mx-auto mb-2" />
-                            <p className="text-xs text-[var(--text-muted)]">Generating video...</p>
-                            <p className="text-[10px] text-[var(--text-muted)] mt-1">~2-3 minutes</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="aspect-video flex items-center justify-center bg-[var(--bg-elevated)]">
-                          <p className="text-xs text-red-400">Failed</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[var(--border-subtle)]">
+              <span className="text-xs text-[var(--text-muted)]">
+                {new Date(dream.created_at).toLocaleString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </span>
+              {dream.tags?.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2 py-0.5 rounded-md text-[10px] bg-[var(--accent-glow)] text-[var(--accent)]"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </motion.div>
 
           {/* Sidebar - Actions */}
           <div className="space-y-4">
