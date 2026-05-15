@@ -1,117 +1,192 @@
-# Dream Recorder - 梦境记录器
+# Dream Recorder
 
-AI 驱动的梦境可视化应用。描述你的梦，AI 帮你生成精美图片和视频。
+AI-powered dream visualization. Describe your dream, get surreal paintings and cinematic videos.
 
-## 技术栈
+## Tech Stack
 
-- **前端**: Next.js 15 + TypeScript + Tailwind CSS + Framer Motion
-- **后端**: Python FastAPI + SQLAlchemy + PostgreSQL
-- **AI**: 阿里云百炼 DashScope API (Qwen + 万相)
-- **认证**: JWT + OAuth2 (Google / GitHub)
+- **Frontend**: Next.js 16 + TypeScript + Tailwind CSS + Framer Motion
+- **Backend**: Python FastAPI + SQLAlchemy + PostgreSQL
+- **AI Pipeline**: Alibaba Cloud DashScope (Qwen-Plus + Wan2.7-Image + HappyHorse R2V)
+- **Storage**: Alibaba Cloud OSS (permanent media storage)
+- **Auth**: JWT + OAuth2 (Google / GitHub)
+- **Server**: Alibaba Cloud ECS (Jakarta), Nginx reverse proxy
 
-## 快速开始
+## Architecture
 
-### 方式一：Docker Compose（推荐）
-
-```bash
-# 1. 复制环境变量文件
-cp backend/.env.example backend/.env
-
-# 2. 编辑 .env 文件，填入你的 DashScope API Key
-# DASHSCOPE_API_KEY=your-api-key-here
-
-# 3. 启动所有服务
-docker-compose up -d
-
-# 前端: http://localhost:3000
-# 后端: http://localhost:8000
-# API 文档: http://localhost:8000/docs
+```
+User → Next.js (port 3000) → Nginx (port 80) → FastAPI (port 8000)
+                                                       │
+                              ┌─────────────────────────┼──────────────────┐
+                              │                         │                  │
+                         PostgreSQL              DashScope API         OSS Bucket
+                         (dreamrecorder)         (AI generation)      (dream-recorder-media)
 ```
 
-### 方式二：手动启动
+### AI Prompt Pipeline (Two-Step)
 
-#### 后端
+```
+User dream text
+    │
+    ▼
+[Call 1] Creative Director Agent (qwen-plus, temp 0.7)
+    → Analyzes intent, emotion, fills visual gaps
+    → Outputs structured DreamAnalysis JSON (18 fields)
+    │
+    ▼
+[Call 2] Prompt Expansion (qwen-plus, temp 0.85)
+    → Image: random 3-pick from 18-artist pool → surreal painting prompt
+    → Video: FPV camera constraints → cinematic motion prompt
+    │
+    ▼
+[Generation] Wan2.7-Image (text-to-image) → HappyHorse R2V (reference-to-video, 10s)
+    │
+    ▼
+[Storage] DashScope temp URL → download → upload to OSS → permanent public URL
+```
+
+## Quick Start
+
+### Backend
 
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
 
-# 配置环境变量
 cp .env.example .env
-# 编辑 .env 填入配置
+# Fill in: DATABASE_URL, DASHSCOPE_API_KEY, OSS credentials
 
-# 确保 PostgreSQL 运行中，且创建了 dreamrecorder 数据库
-# createdb dreamrecorder
-
-# 启动
 uvicorn app.main:app --reload --port 8000
 ```
 
-#### 前端
+### Frontend
 
 ```bash
 cd frontend
 npm install
-
-# 配置 API 地址
-cp .env.local.example .env.local
-
-# 启动开发服务器
 npm run dev
+# Opens at http://localhost:3000
 ```
 
-## 项目结构
+## Project Structure
 
 ```
 Dream Recorder/
-├── DESIGN.md                 # 产品设计文档
-├── docker-compose.yml        # Docker 编排
-├── backend/                  # Python FastAPI 后端
+├── README.md
+├── DESIGN.md
+├── backend/
 │   ├── app/
-│   │   ├── api/routes/       # API 路由
-│   │   │   ├── auth.py       # 认证接口
-│   │   │   ├── dreams.py     # 梦境 CRUD
-│   │   │   └── generate.py   # AI 生成
-│   │   ├── core/             # 配置 & 安全
-│   │   ├── db/               # 数据库连接
-│   │   ├── models/           # SQLAlchemy 模型
-│   │   ├── schemas/          # Pydantic 模型
-│   │   ├── services/         # AI 服务封装
-│   │   └── main.py           # 入口
-│   ├── requirements.txt
-│   └── Dockerfile
-└── frontend/                 # Next.js 前端
-    ├── src/
-    │   ├── app/              # 页面
-    │   │   ├── page.tsx      # 落地页
-    │   │   ├── auth/         # 登录注册
-    │   │   ├── dashboard/    # 仪表板
-    │   │   ├── record/       # 记录梦境
-    │   │   ├── dreams/[id]/  # 梦境详情
-    │   │   └── gallery/      # 画廊
-    │   ├── components/       # 组件
-    │   ├── lib/              # API 封装
-    │   └── stores/           # 状态管理
-    ├── tailwind.config.ts
-    └── Dockerfile
+│   │   ├── api/routes/
+│   │   │   ├── auth.py              # Login/register, OAuth callbacks
+│   │   │   ├── dreams.py            # Dream CRUD + list (paginated)
+│   │   │   └── generate.py          # Image/video generation + task polling
+│   │   ├── core/
+│   │   │   ├── config.py            # Settings (DB, DashScope, OSS, OAuth)
+│   │   │   └── security.py          # JWT token handling
+│   │   ├── db/session.py            # Async SQLAlchemy session
+│   │   ├── models/models.py         # User, Dream, Generation ORM models
+│   │   ├── schemas/schemas.py       # Pydantic request/response schemas
+│   │   └── services/
+│   │       ├── ai_service.py        # DashScope API calls (image/video/LLM)
+│   │       ├── creative_director.py # Call 1: intent analysis → DreamAnalysis JSON
+│   │       ├── prompt_expansion.py  # Call 2: artist pool + FPV → final prompt
+│   │       └── storage_service.py   # OSS persist (temp URL → permanent)
+│   ├── scripts/
+│   │   └── migrate_to_oss.py       # Batch migrate old URLs to OSS
+│   └── requirements.txt
+└── frontend/
+    └── src/
+        ├── app/
+        │   ├── page.tsx             # Redirect (→ /create or → /auth)
+        │   ├── auth/page.tsx        # Split-screen login (Email + Google + GitHub)
+        │   ├── create/page.tsx      # Main page: dream input + Daily Top 20
+        │   ├── dreams/page.tsx      # My Dreams grid
+        │   ├── dreams/[id]/page.tsx # Dream detail (image + video side by side)
+        │   ├── explore/page.tsx     # Explore (placeholder)
+        │   ├── favorites/page.tsx   # Favorites (placeholder)
+        │   ├── globals.css          # Design system CSS variables
+        │   └── layout.tsx           # Root layout + Sidebar
+        ├── components/layout/
+        │   ├── Sidebar.tsx          # Left icon sidebar (72px)
+        │   └── AuthProvider.tsx     # Auth state + route protection
+        ├── lib/api.ts               # API client (fetch wrapper)
+        └── stores/authStore.ts      # Zustand auth store (persist)
 ```
 
-## AI 功能说明
+## Key Features
 
-### 文本增强（Qwen）
-用户输入的梦境描述 → Qwen 模型优化为英文 Prompt → 用于图片/视频生成
+### 18-Artist Pool (Random 3-Pick)
+Each image generation randomly samples 3 artists from a curated pool of 18 dream/surreal painters (Dalí, Magritte, Chagall, Munch, Klimt, Kusama, etc.). This produces varied aesthetics while maintaining consistent surreal quality.
 
-### 图片生成（万相 wan2.6-image）
-支持 6 种风格：超现实、水彩、赛博朋克、古典油画、宫崎骏、暗黑哥特
+### FPV Video (First-Person View)
+Video generation uses a "disembodied floating consciousness" perspective — no human subject, no hands/body. The camera IS the dreamer's eyes. This avoids gender appearance issues and keeps videos consistent with the surreal painting.
 
-### 视频生成（万相 wan2.7-t2v）
-支持 720P/1080P，2-15 秒时长，多种画面比例
+### Image-First Flow
+Users must generate an image before video. Video uses R2V (Reference-to-Video) with the image as reference, preserving the painterly aesthetic instead of creating photorealistic output.
 
-## 后续计划
+### OSS Permanent Storage
+DashScope returns temporary URLs that expire within hours. The system automatically downloads results and persists them to Alibaba Cloud OSS with permanent public URLs.
 
-- [ ] 用量统计 & 额度系统（免费/付费）
-- [ ] 梦境社区广场
-- [ ] 语音输入
-- [ ] 阿里云部署（ECS + RDS + OSS）
+## Environment Variables
+
+```env
+# Database
+DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/dreamrecorder
+
+# DashScope AI
+DASHSCOPE_API_KEY=sk-xxx
+DASHSCOPE_BASE_URL=https://dashscope-intl.aliyuncs.com
+
+# OSS Storage
+OSS_ACCESS_KEY_ID=LTAI5t...
+OSS_ACCESS_KEY_SECRET=xxx
+OSS_ENDPOINT=https://oss-ap-southeast-5.aliyuncs.com
+OSS_BUCKET_NAME=dream-recorder-media
+
+# OAuth (optional)
+GOOGLE_CLIENT_ID=xxx
+GOOGLE_CLIENT_SECRET=xxx
+GITHUB_CLIENT_ID=xxx
+GITHUB_CLIENT_SECRET=xxx
+
+# App
+SECRET_KEY=your-secret
+FRONTEND_URL=http://localhost:3000
+```
+
+## Deployment (Production)
+
+Server: Alibaba Cloud ECS (147.139.134.10), Jakarta region
+
+```bash
+# Pull latest
+cd /opt/dream-recorder && git pull
+
+# Backend
+cd backend && source venv/bin/activate
+pip install -r requirements.txt
+pkill -f uvicorn
+nohup uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/backend.log 2>&1 &
+
+# Frontend
+cd ../frontend && npm run build
+pkill -f next-server
+nohup npm exec next start -- -p 3000 > /tmp/frontend.log 2>&1 &
+```
+
+Nginx proxies port 80 → frontend (3000), `/api/` → backend (8000).
+
+## Roadmap
+
+- [x] Core AI pipeline (Creative Director + Prompt Expansion + Image + Video)
+- [x] 18-artist pool with random sampling
+- [x] FPV video generation (R2V only)
+- [x] OSS permanent storage
+- [x] C-end redesign (wan.video-inspired dark SaaS aesthetic)
+- [ ] Fix /dreams page crash (API response parsing)
+- [ ] Daily Top 20 explore gallery (backend curation API)
+- [ ] Favorites feature
+- [ ] B-end admin panel (Vite + Ant Design) for artist pool management
+- [ ] Process manager (systemd/pm2) for production stability
+- [ ] Domain DNS fix (dreamrecorder.xyz)

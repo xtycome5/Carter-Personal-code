@@ -1,237 +1,234 @@
-# Dream Recorder - 梦境记录器 产品设计文档
+# Dream Recorder - 产品设计文档
 
-## 产品概述
+## 产品定位
 
-Dream Recorder 是一款 AI 驱动的梦境可视化应用。用户醒来后描述自己的梦境，AI 会将文字描述转化为精美的图片和视频，帮助用户"回放"和保存梦境。
+Dream Recorder 是一款 AI 梦境可视化工具。用户输入梦境文字描述，系统自动生成超现实风格的绘画和电影级视频。
 
-灵感来源：MODEM 工作室的 Dream Recorder 概念产品。
+定位：纯梦境场景，非通用创作工具。
 
----
+## 设计语言
 
-## 技术架构
+参考 wan.video (create.wan.video) 的 professional dark SaaS 风格。
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    Frontend                          │
-│         Next.js 14 + Tailwind CSS + Framer Motion   │
-│         (暗色梦幻主题 / 紫蓝渐变风格)               │
-└────────────────────────┬────────────────────────────┘
-                         │ REST API
-┌────────────────────────▼────────────────────────────┐
-│                    Backend                           │
-│              Python FastAPI + SQLAlchemy             │
-│         JWT Auth / OAuth2 (Google & GitHub)          │
-└────────┬───────────────┬───────────────┬────────────┘
-         │               │               │
-    ┌────▼────┐   ┌──────▼──────┐  ┌─────▼─────┐
-    │PostgreSQL│   │ DashScope   │  │  OSS/S3   │
-    │ Database │   │   AI API    │  │  Storage  │
-    └─────────┘   └─────────────┘  └───────────┘
-```
+### 色彩系统
 
----
+| Token | Value | Usage |
+|-------|-------|-------|
+| --bg-primary | #0c0c14 | 页面背景 |
+| --bg-secondary | #14141f | 侧边栏/次级区域 |
+| --bg-elevated | #1a1a2e | 弹层/卡片内层 |
+| --bg-card | #1e1e32 | 卡片背景 |
+| --accent | #7c5cfc | 主强调色 |
+| --accent-glow | rgba(124,92,252,0.15) | 发光效果 |
+| --border-subtle | rgba(255,255,255,0.06) | 细微边框 |
+| --border-hover | rgba(255,255,255,0.12) | 悬停边框 |
+| --text-primary | #f0f0f5 | 主文字 |
+| --text-secondary | #9ca3af | 次级文字 |
+| --text-muted | #6b7280 | 辅助文字 |
 
-## 核心功能模块
+### 设计原则
 
-### 1. 用户系统
-- **注册**：邮箱 + 密码注册，邮箱验证
-- **登录**：邮箱密码 / Google OAuth / GitHub OAuth
-- **个人中心**：头像、昵称、梦境统计
+- 干净现代 SaaS 感，不要 glass-morphism、不要粒子效果
+- 大留白、宽松间距
+- 圆角 12-16px
+- 微妙的 border 区分层级，不用阴影
+- 动效克制：仅 framer-motion 入场淡入，不做复杂动画
 
-### 2. 梦境记录
-- **文字输入**：用户用文字描述梦境内容
-- **AI 增强描述**：Qwen 模型自动优化和扩展用户的描述，生成更丰富的提示词
-- **标签系统**：自动/手动标记梦境关键词（如：飞翔、追逐、水下等）
-- **情绪标记**：记录梦境的情绪基调（奇幻、恐怖、温馨、悲伤等）
+## 页面路由
 
-### 3. AI 生图（核心功能一）
-使用阿里云万相 wan2.6-image 模型
-
-**场景设计：**
-| 场景 | 说明 | 风格参数 |
-|------|------|---------|
-| 梦境重现 | 还原梦中的主要场景 | 超现实主义 + 柔焦 |
-| 梦中人物 | 生成梦中出现的角色 | 人像 + 幻想风 |
-| 情绪画卷 | 基于梦境情绪生成抽象画 | 抽象表现主义 |
-| 梦境符号 | 提取梦中象征物并可视化 | 符号主义 + 暗色调 |
-| 平行梦境 | 同一梦境的多种视觉解读 | 多风格变体 |
-
-**风格选项：**
-- 水彩梦幻 (Watercolor Dreamscape)
-- 赛博朋克 (Cyberpunk Dream)
-- 古典油画 (Classical Painting)
-- 超现实达利 (Surrealist Dalí)
-- 宫崎骏风 (Ghibli Style)
-- 暗黑哥特 (Dark Gothic)
-
-### 4. AI 生视频（核心功能二）
-使用阿里云万相 wan2.7-t2v 模型
-
-**场景设计：**
-| 场景 | 说明 | 时长 |
+| 路由 | 功能 | 状态 |
 |------|------|------|
-| 梦境回放 | 将整个梦境叙述转为短视频 | 5-10秒 |
-| 梦境片段 | 聚焦梦中某个关键时刻 | 3-5秒 |
-| 梦境循环 | 生成可循环播放的梦境动画 | 3-5秒 |
-| 梦境延续 | "如果梦继续下去会怎样？" | 5-10秒 |
-| 梦日记封面 | 为每日梦境生成动态封面 | 3秒 |
+| `/` | 重定向（登录→/create，未登录→/auth） | ✅ |
+| `/auth` | 登录/注册（分屏布局：左渐变艺术图，右表单） | ✅ |
+| `/create` | 主页：梦境输入 + Daily Top 20 占位 | ✅ |
+| `/dreams` | My Dreams 网格列表 | ✅ |
+| `/dreams/[id]` | 梦境详情（图片+视频并排，文字在下） | ✅ |
+| `/explore` | Daily Top 20 画廊 | 占位 |
+| `/favorites` | 收藏 | 占位 |
 
-### 5. 梦境画廊
-- **时间轴视图**：按日期排列的梦境记录
-- **瀑布流画廊**：所有生成的图片/视频浏览
-- **梦境日历**：日历视图标记有梦的日期
-- **搜索和筛选**：按标签、情绪、日期筛选
+## 布局结构
 
-### 6. 社交分享
-- 生成分享卡片（图片 + 梦境摘要）
-- 公开/私密设置
-- 梦境社区广场（后期）
+### 全局布局
+- 左侧固定侧边栏：72px 宽，icon-only，深色背景
+- 图标：Create / Explore / My Dreams / Favorites
+- 底部：用户头像 + 登出
+- 主内容区：`margin-left: 72px`，自适应宽度
 
----
+### /auth 登录页
+- 分屏：左 45% 渐变艺术大图，右 55% 表单
+- 表单：Email + Password → 登录按钮 → OR 分隔线 → Google + GitHub
+- 深色背景，无侧边栏
 
-## 页面设计
+### /create 主页
+- Hero 区："Visualize Your Dreams" + 描述输入框
+- 输入区：大文本框 + Generate 按钮
+- 下方：Daily Top 20 画廊区域（占位）
 
-### 页面清单
-1. **Landing Page** - 产品介绍落地页
-2. **登录/注册页** - 邮箱注册 + 社交登录
-3. **主面板 (Dashboard)** - 最近梦境 + 快速记录入口
-4. **梦境记录页** - 文字输入 + AI 生成选项
-5. **生成结果页** - 查看 AI 生成的图片/视频
-6. **梦境画廊** - 所有历史梦境浏览
-7. **梦境详情页** - 单条梦境的完整内容
-8. **个人中心** - 账号设置 + 统计
+### /dreams/[id] 详情页
+- 上方两栏并排（1:1 比例）：
+  - 左 = 图片（有图显示，无图则"Generate Image"按钮）
+  - 右 = 视频框（始终显示）：
+    - 有视频 → 播放器
+    - 有图无视频 → 框内"Bring it to life" CTA 按钮
+    - 无图 → 灰色"先生成图片"提示
+- 下方：
+  - 左 = 用户原始描述 + AI Creative Brief
+  - 右 = Regenerate 按钮 + About 信息卡
 
-### UI 风格
-- **色彩**：深空蓝（#0a0a1a）为底，紫罗兰渐变（#6366f1 → #a855f7）为强调色
-- **字体**：中文思源黑体，英文 Inter/Outfit
-- **动效**：微妙的星尘粒子背景 + 页面流畅过渡
-- **卡片**：毛玻璃效果 (backdrop-blur) + 微光边框
-- **整体氛围**：如同置身星空下的梦境世界
+## AI 生成流程
 
----
+### 用户操作流
 
-## API 设计
-
-### 认证相关
 ```
-POST /api/auth/register      - 邮箱注册
-POST /api/auth/login         - 邮箱登录
-POST /api/auth/oauth/google  - Google OAuth
-POST /api/auth/oauth/github  - GitHub OAuth
-GET  /api/auth/me            - 获取当前用户信息
-```
-
-### 梦境相关
-```
-POST   /api/dreams           - 创建梦境记录
-GET    /api/dreams           - 获取梦境列表（分页）
-GET    /api/dreams/{id}      - 获取梦境详情
-PUT    /api/dreams/{id}      - 更新梦境
-DELETE /api/dreams/{id}      - 删除梦境
+用户输入文字 → 点击 Generate
+    → 后端自动执行 Prompt Pipeline
+    → 返回 generation_id
+    → 前端轮询 task status (每 5 秒)
+    → SUCCEEDED → 展示图片
+    → 用户点击视频框 CTA → 生成 R2V 视频
+    → 轮询完成 → 展示视频
 ```
 
-### AI 生成相关
-```
-POST /api/generate/enhance   - AI 增强梦境描述
-POST /api/generate/image     - 生成梦境图片
-POST /api/generate/video     - 生成梦境视频
-GET  /api/generate/task/{id} - 查询生成任务状态
-```
+### Prompt Pipeline 详解
 
-### 用户相关
-```
-GET  /api/users/stats        - 用户统计
-PUT  /api/users/profile      - 更新个人信息
-```
+**Call 1: Creative Director Agent**
+- 模型：qwen-plus, temperature 0.7
+- 输入：用户原始梦境文字
+- 输出：DreamAnalysis JSON（18 个字段）
+  - emotion, intensity, color_palette, lighting, time_of_day
+  - weather_atmosphere, spatial_scale, camera_perspective
+  - subjects, background_elements, textures_materials
+  - movement_quality, sound_suggestion, symbolic_elements
+  - compositional_focus, contrast_pairs, narrative_arc, overall_mood
+- 约束：response_format = json_object，确保结构化输出
 
----
+**Call 2: Prompt Expansion**
+- 模型：qwen-plus, temperature 0.85
+- Image prompt：
+  - 从 18 画家池随机取 3 位
+  - 动态构建 system prompt，融合画家风格描述
+  - 输出：英文绘画提示词（存入 dream.enhanced_content）
+- Video prompt：
+  - FPV（第一人称视角）系统约束
+  - 禁止出现人体部位（手、脚、手臂等）
+  - 摄影语言：镜头mm、运动速度、色温、烟雾密度%
+  - 输出：英文电影运动提示词（存入 generation.prompt）
 
-## 数据库设计
+### 画家池 (18 位)
 
-### users 表
-| 字段 | 类型 | 说明 |
+| 分类 | 画家 |
+|------|------|
+| 超现实核心 | Dalí, Magritte, Ernst, Varo, Carrington |
+| 表现主义/扭曲 | Munch, Schiele, Bacon |
+| 诗意失重 | Chagall, Redon, Klimt, Mucha |
+| 神秘象征 | Bosch, Blake, Beksiński |
+| 现代梦幻 | Kusama, de Chirico, Sage |
+
+每次生图随机取 3 位，无权重（均匀随机）。未来通过 B 端后台管理增删。
+
+### 生成模型
+
+| 用途 | 模型 | 参数 |
 |------|------|------|
-| id | UUID | 主键 |
-| email | VARCHAR | 邮箱（唯一） |
-| password_hash | VARCHAR | 密码哈希 |
-| nickname | VARCHAR | 昵称 |
-| avatar_url | VARCHAR | 头像 |
-| oauth_provider | VARCHAR | OAuth 来源 |
-| oauth_id | VARCHAR | OAuth ID |
-| created_at | TIMESTAMP | 注册时间 |
+| 文生图 | wan2.7-image | 1024x1024 |
+| 参考生图 | wan2.7-image-pro | reference + prompt |
+| 参考生视频 | happyhorse-1.0-r2v | 10s, 720P, FPV |
 
-### dreams 表
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | UUID | 主键 |
-| user_id | UUID | 用户外键 |
-| title | VARCHAR | 梦境标题 |
-| content | TEXT | 梦境描述（原始） |
-| enhanced_content | TEXT | AI 增强后的描述 |
-| mood | VARCHAR | 情绪标记 |
-| tags | JSONB | 标签数组 |
-| is_public | BOOLEAN | 是否公开 |
-| created_at | TIMESTAMP | 创建时间 |
+注意：不再支持 T2V（文生视频）。所有视频必须基于已生成的图片作为参考。
 
-### generations 表
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | UUID | 主键 |
-| dream_id | UUID | 梦境外键 |
-| user_id | UUID | 用户外键 |
-| type | VARCHAR | image / video |
-| style | VARCHAR | 生成风格 |
-| prompt | TEXT | 实际使用的提示词 |
-| status | VARCHAR | pending/processing/completed/failed |
-| task_id | VARCHAR | DashScope 任务ID |
-| result_url | VARCHAR | 生成结果URL |
-| metadata | JSONB | 元数据（分辨率等） |
-| created_at | TIMESTAMP | 创建时间 |
+## 存储架构
 
----
+### OSS Bucket
 
-## 阿里云 AI 模型配置
+- Bucket: `dream-recorder-media`
+- Region: ap-southeast-5 (Jakarta)
+- ACL: public-read
+- 路径: `images/{user_id}/{generation_id}.png`, `videos/{user_id}/{generation_id}.mp4`
 
-### 文本增强（Qwen）
-- Endpoint: `https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions`
-- Model: `qwen-plus`（可切换）
-- 用途：优化用户的梦境描述，生成适合图像/视频模型的 prompt
+### 持久化流程
 
-### 图片生成（万相）
-- Endpoint: `https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/image-generation/generation`
-- Model: `wan2.6-image`
-- 调用方式：异步（X-DashScope-Async: enable）
-- 查询结果：GET `/api/v1/tasks/{task_id}`
+```
+DashScope 生成完成（SUCCEEDED）
+    → 返回临时 URL（24h 内过期）
+    → storage_service.persist():
+        1. httpx 下载到内存
+        2. oss2 上传到 bucket
+        3. 返回永久 public URL
+    → 更新 generation.result_url
+```
 
-### 视频生成（万相）
-- Endpoint: `https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/video-generation/video-synthesis`
-- Model: `wan2.7-t2v-2026-04-25`
-- 调用方式：异步（X-DashScope-Async: enable）
-- 查询结果：GET `/api/v1/tasks/{task_id}`
+## API 接口
 
----
+### 认证
 
-## 开发计划
+```
+POST /api/auth/register          注册（email + password）
+POST /api/auth/login             登录 → JWT token
+GET  /api/auth/me                当前用户信息
+GET  /api/auth/oauth/google      Google OAuth 跳转
+GET  /api/auth/oauth/github      GitHub OAuth 跳转
+```
 
-### Phase 1 - MVP Demo（当前）
-- [x] 产品设计文档
-- [ ] 前端页面基础框架
-- [ ] 后端 API 基础框架
-- [ ] 用户注册登录
-- [ ] 梦境记录 CRUD
-- [ ] AI 生图功能
-- [ ] AI 生视频功能
-- 不限制使用量
+### 梦境
 
-### Phase 2 - 完善
-- [ ] 用量统计与额度系统
-- [ ] 免费/付费额度切换
+```
+POST   /api/dreams               创建梦境
+GET    /api/dreams               列表（分页，返回 {dreams: [...], total, page}）
+GET    /api/dreams/{id}          详情（含 generations 数组）
+PUT    /api/dreams/{id}          更新
+DELETE /api/dreams/{id}          删除
+```
+
+### 生成
+
+```
+POST /api/generate/enhance       预览 AI 扩写
+POST /api/generate/image         生成图片（自动执行 prompt pipeline）
+POST /api/generate/video         生成视频（需先有完成的图片，否则 400）
+GET  /api/generate/task/{id}     轮询任务状态
+```
+
+## 数据库模型
+
+### users
+- id (UUID), email, password_hash, nickname, avatar_url
+- oauth_provider, oauth_id, created_at
+
+### dreams
+- id (UUID), user_id (FK), title, content, enhanced_content
+- mood, tags (JSONB), is_public, created_at
+
+### generations
+- id (UUID), dream_id (FK), user_id (FK)
+- type (image/video), style, prompt, negative_prompt
+- status (processing/completed/failed), task_id, result_url
+- metadata_json (JSONB: size, mode, duration, reference_image...)
+- created_at
+
+## 开发规划
+
+### 已完成 (Phase 1)
+- [x] 用户系统（Email + JWT + Google + GitHub OAuth）
+- [x] 梦境 CRUD
+- [x] Creative Director Agent（意图分析 + 结构化输出）
+- [x] 18 画家池 + 随机 3-pick
+- [x] FPV 视频约束（无身体部位）
+- [x] Image-first flow（必须先生图再生视频）
+- [x] OSS 永久存储
+- [x] C 端 UI 重设计（wan.video 风格）
+- [x] 部署上线（ECS + Nginx）
+
+### 进行中 (Phase 2)
+- [ ] Daily Top 20 后端 API（人工筛选或自动评分）
+- [ ] Favorites 功能
+- [ ] 域名 DNS 修复 (dreamrecorder.xyz)
+- [ ] 进程管理（systemd 或 pm2）
+
+### 规划中 (Phase 3)
+- [ ] B 端管理后台（Vite + Ant Design）
+  - 画家池增删管理
+  - 内容审核
+  - 用户管理
+- [ ] 用量统计 & 额度系统
 - [ ] 梦境社区广场
-- [ ] 语音输入梦境
-- [ ] 数据分析面板
-
-### Phase 3 - 部署上线
-- [ ] 阿里云资源开设
-- [ ] CI/CD 配置
-- [ ] 域名与 HTTPS
-- [ ] 性能优化
+- [ ] 语音输入
