@@ -55,7 +55,7 @@ class DreamAnalysis:
     # 动态/运动（视频相关）
     primary_motion: str = ""          # 主要运动（"slow sinking", "rapid flying forward", "everything melting downward"）
     motion_quality: str = ""          # 运动质感（"dreamlike slow-motion", "sudden jerky", "smooth float"）
-    camera_suggestion: str = ""       # 建议的镜头运动（"slow push into the scene", "drift upward", "orbit around"）
+    camera_suggestion: str = ""       # 建议的镜头运动（"slow dreamy lateral drift", "gentle floating scroll"）
 
     # 象征/深层含义
     symbolism: str = ""               # 象征意义（"the wall represents emotional barrier"）

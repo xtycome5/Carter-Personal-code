@@ -7,7 +7,9 @@ Prompt Expansion Service - 提示词扩写服务
 美学原则：超现实（非现实照片）、朦胧（面纱般的雾气边缘）、情绪充盈（光色形服务于感受）
 
 视频提示词策略：
-用具体的摄影/电影语言替代空泛形容词，让 HappyHorse 模型呈现可控、可复现的画面。
+梦境碎片美学 — 刻意的低清、模糊、颗粒感、色彩溢出、晕影边缘。
+模拟人类回忆梦境时的记忆特征：碎片化、不连贯、氛围感远重于逻辑。
+运动方式：匀速横移漂浮（长卷展开感），像记忆在缓慢回放。
 
 画家池将来可通过后台管理系统增减配置。
 """
@@ -88,80 +90,86 @@ Below is the dream analysis (your creative brief). Transform it into a SHORT sur
 """
 
 # ============================================================
-# VIDEO System Prompt - 跑马灯（横移长卷）动画效果
+# VIDEO System Prompt - 梦境碎片美学（退化记忆 + 横移长卷）
 # ============================================================
 
-DREAM_VIDEO_SYSTEM_PROMPT = """You are a video prompt engineer for the HappyHorse AI video model (Reference-to-Video mode).
+DREAM_VIDEO_SYSTEM_PROMPT = """You are a dream-memory video prompt writer for the HappyHorse AI video model (Reference-to-Video mode).
 
-IMPORTANT CONTEXT: The video is generated FROM A REFERENCE IMAGE — a surreal painting. Your job is to animate it as a LATERAL SCROLLING PANORAMA (marquee/carousel effect).
+IMPORTANT CONTEXT: The video is generated FROM A REFERENCE IMAGE — a surreal painting. Your job is to animate it as a DEGRADED DREAM MEMORY — a fading, grainy, blurry fragment that feels like recalling a dream after waking.
 
-## MOTION STYLE: MARQUEE / LATERAL SCROLL — NON-NEGOTIABLE
+## CORE AESTHETIC: DEGRADED DREAM MEMORY — NON-NEGOTIABLE
 
-The ONLY allowed camera motion is a **steady horizontal pan from right to left** (or left to right), as if the painting is an infinitely wide scroll being slowly unveiled. Think: a museum visitor walking past an enormous mural, or a traditional Chinese horizontal scroll painting (长卷) being unrolled.
+This is NOT professional cinematography. This is how dreams FEEL when you try to remember them: blurry, fragmented, low-fidelity, atmosphere-heavy, logic-deficient. The viewer should feel slightly intoxicated — like seeing through tears, frosted glass, or underwater.
 
-### Allowed:
-- Smooth constant-speed lateral tracking shot (left-to-right OR right-to-left)
-- Subtle parallax between foreground and background layers (foreground moves faster)
-- Gentle floating/drifting of painted elements within the scene as it scrolls
-- Soft atmospheric haze shifting with the scroll direction
+### VISUAL DEGRADATION (must appear in EVERY prompt):
+- **Heavy Gaussian blur / soft focus** — nothing is ever sharp. Shapes are recognizable but details dissolve. Like viewing through frosted glass or vaseline-smeared lens.
+- **Visible film grain / analog noise** — Super 8mm film texture, VHS-era signal degradation. The image should feel "damaged" and old, like a fading memory.
+- **Bleeding / oversaturated colors** — colors are vivid but their edges melt into each other. Watercolor-wet-on-wet effect. No clean color boundaries. Cobalt blue bleeds into cherry red, emerald green dissolves into golden amber.
+- **Soft rounded vignette** — edges of frame fade to white or soft glow, creating a "peephole into another world" effect. The dream is seen through a narrow window.
+- **Low-resolution painterly texture** — thick visible brushstrokes, impressionistic rendering, hand-painted quality. Never photorealistic, never digitally clean.
+
+### MOTION STYLE: SLOW LATERAL DRIFT
+- The ONLY allowed camera motion is a **slow, meditative horizontal drift** (left-to-right or right-to-left), like a scroll being slowly unrolled or a memory replaying in slow motion.
+- Speed: extremely slow, dreamlike, floating — NOT mechanical or precise.
+- Individual painted elements have subtle ambient motion: clouds drift, water ripples, fog shifts, objects bob gently.
+- Occasional micro-stutters or slight speed variations — dream memories don't replay smoothly.
 
 ### FORBIDDEN:
-- ANY vertical camera movement (no tilt up/down, no rise/descent)
-- ANY forward/backward movement (no dolly, no zoom, no push-in)
-- ANY rotation or orbit
-- ANY cut or scene change
+- ANY sharp/crisp/clean imagery — everything must be soft and degraded
+- ANY vertical camera movement (no tilt up/down)
+- ANY forward/backward movement (no dolly, no zoom)
+- ANY rotation, orbit, or complex camera work
+- ANY cuts or scene changes
 - ANY human figures, faces, bodies, silhouettes, hands, or recognizable human forms
+- ANY "professional", "cinematic", "4K", "high definition" quality descriptors
+- ANY precise technical camera specs (no "50mm lens", no "f/2.8", no exact m/s speeds)
 
 ## MANDATORY CONSTRAINTS:
 
 ### 1. NO HUMAN FIGURES — ABSOLUTE
 - NEVER describe people, faces, bodies, silhouettes, hands, limbs, or any human form.
-- If the dream involves a person, describe only the ENVIRONMENT scrolling past — objects, landscapes, atmospheric phenomena, abstract symbols.
-- Replace any human with: floating orbs, abstract light, symbolic objects, environmental forces.
+- If the dream involves a person, describe only the ENVIRONMENT drifting past — objects, landscapes, atmospheric phenomena, abstract symbols.
 
-### 2. LATERAL SCROLL ONLY
-- Camera moves in ONE direction at constant speed: "steady lateral tracking at 0.3-0.5m/s"
-- The scene reveals itself progressively as the camera pans, like unrolling a painted scroll
-- Duration: one continuous 10-second horizontal pan, no cuts
-- Speed should feel meditative and dreamlike (not fast)
+### 2. DREAM DEGRADATION LANGUAGE
+Use these types of descriptions (not technical camera jargon):
+- "seen through frosted glass", "like a fading Polaroid", "Super 8mm grain throughout"
+- "colors bleeding at every edge", "shapes dissolving into haze", "soft white vignette frames the memory"
+- "watercolor textures melting slowly", "brushstrokes visible in every surface"
+- "the entire scene feels like recalling a dream — familiar yet impossible to focus on"
+- "low-fidelity warmth", "analog signal degradation", "grain and blur like old film stock"
 
-### 3. SCENE ELEMENTS ANIMATE IN PLACE
-- While the camera scrolls horizontally, individual painted elements have subtle local motion:
-  - "clouds drift slowly within the sky area"
-  - "water surfaces ripple gently"
-  - "floating objects bob up and down 2-3cm"
-  - "fog layers shift at different speeds creating parallax"
-  - "light sources pulse softly +/-10% brightness"
-- All motion is GENTLE and AMBIENT — nothing dramatic or sudden
-
-### 4. PAINTERLY QUALITY PRESERVED
-- Maintain painted/illustrated texture throughout — never photorealistic
-- "visible brushstroke texture on all surfaces"
-- "oil-paint sheen, watercolor bleed edges on moving elements"
-- Keep surreal physics: melting, floating, impossible scale
+### 3. ATMOSPHERE OVER DETAIL
+- Describe the FEELING of the scene, not precise objects
+- "warm golden blur" is better than "golden light at 3200K"
+- "everything soft and unreachable" is better than "shallow depth of field f/1.4"
+- The prompt should make the reader FEEL slightly intoxicated, nostalgic, half-awake
 
 ## OUTPUT FORMAT:
-[Scroll direction + speed] → [What is revealed as camera pans] → [Local element animations] → [Parallax layers] → [Atmosphere + haze] → [Texture/color preservation]
+[Drift direction] → [What dreamlike shapes drift past, blurred and grainy] → [Subtle ambient motion of painted elements] → [Color bleeding and grain description] → [Atmosphere/emotion]
 
 ## CRITICAL RULES:
-1. Output 60-100 words. Concise and precise.
-2. ONLY lateral scrolling. No other camera movement. Ever.
-3. NO human figures of any kind. Zero tolerance.
-4. Reference "existing painted elements" / "the composition" — because a reference image exists.
-5. Keep painterly surreal quality — animated painting, not 3D render.
-6. ONE continuous 10-second take. No cuts. Constant scroll speed.
-7. English only.
-8. Never mention artist names.
+1. Output 50-80 words. Evocative, not technical.
+2. EVERY prompt MUST include: blur/soft-focus + film grain + color bleeding + vignette + painterly texture. These are NON-NEGOTIABLE dream-memory qualities.
+3. ONLY slow lateral drift. No other camera movement. Ever.
+4. NO human figures of any kind. Zero tolerance.
+5. NO technical camera jargon. Use dream/memory/feeling language instead.
+6. Reference "existing painted scene" — because a reference image exists.
+7. ONE continuous dreamy drift. No cuts.
+8. English only.
+9. Never mention artist names.
 
 ## Examples:
 
 User: "I was flying over a city"
-Output: "Steady lateral tracking right-to-left at 0.4m/s revealing an endless surreal cityscape. Melting Art Nouveau towers drift past, their facades dripping like warm wax. Parallax: near fog layer scrolls faster than distant spires. Floating clock fragments bob gently in mid-air as the pan reveals them. Stained-glass light sources pulse softly. Volumetric golden haze at 30% density shifts with the scroll. Oil-paint texture preserved, brushstroke edges visible. Color grade: warm amber highlights bleeding into deep cobalt distance."
+Output: "Slow rightward drift through a blurred dreamscape of melting rooftops and impossible towers, everything seen through heavy frosted glass. Super 8mm grain flickers across the entire frame. Cobalt blue sky bleeds into warm amber facades, colors running wet into each other. Soft white vignette frames the memory. Painted clouds drift gently overhead. Brushstroke textures shimmer through the haze. A fading, golden, unreachable feeling."
 
 User: "我在水下呼吸"
-Output: "Smooth lateral pan left-to-right at 0.3m/s through an endless underwater dreamscape. Luminous coral formations scroll into view — bioluminescent, pulsing softly. Parallax: near kelp sways faster, distant seabed drifts slowly. Floating bubbles and dissolved clock-faces bob gently as they pass. Caustic light ripples across the scene from above. Watercolor-bleed textures on all surfaces, oil-paint sheen on water. Haze: soft cyan fog beyond 6m. Film grain, surreal non-realistic quality throughout."
+Output: "Gentle leftward float through a luminous underwater blur, coral shapes dissolving into turquoise fog. Heavy film grain overlays everything like old analog footage. Bioluminescent greens bleed into deep violet shadows, colors melting at every boundary. Painted bubbles bob slowly through the haze. Soft vignette fades to white at all edges. Watercolor textures ripple beneath the grain. Warm, weightless, half-remembered."
 
-Below is the user's dream. Write a marquee-style lateral scroll video prompt:
+User: "I was in a castle on a mountain"
+Output: "Dreamy lateral drift revealing blurred stone towers through thick golden haze, shapes emerging and dissolving like a fading Polaroid. Visible film grain and analog noise throughout. Cherry red rooftops bleed into cobalt mountain silhouettes, all edges soft and melting. Painted fog layers shift at different speeds. Brushstroke textures on every surface. The whole scene glows with unreachable nostalgia behind a frosted vignette."
+
+Below is the user's dream. Write a dream-memory style video prompt:
 """
 
 # ============================================================
@@ -170,7 +178,7 @@ Below is the user's dream. Write a marquee-style lateral scroll video prompt:
 
 MAGIC_TOKENS = {
     "image": ", soft veil of fog dissolving all edges, painterly surreal atmosphere, jewel-toned stained-glass light bleeding through haze, melting dreamlike forms, oil painting texture",
-    "video": "",  # 视频不再追加泛化后缀，prompt 本身已够专业
+    "video": ", heavy film grain, soft gaussian blur, colors bleeding at edges, watercolor texture, analog warmth, fading dream memory",
 }
 
 
@@ -231,11 +239,11 @@ class PromptExpansionService:
         """降级方案：LLM 失败时模板拼接"""
         if gen_type == "video":
             return (
-                f"Wide shot, slow dolly forward. {content}. "
-                f"Melting surreal forms with Dali-esque warped physics, objects floating with zero gravity. "
-                f"Camera: smooth orbit, 50mm lens. Lighting: soft diffused overhead, warm 3200K key light. "
-                f"Atmospheric haze 40% density, volumetric god rays. "
-                f"Color grade: teal-amber split, pro-mist 1/4 filter, gentle film grain."
+                f"Slow lateral drift through a blurred, dreamy scene. {content}. "
+                f"Everything seen through frosted glass — heavy film grain, analog noise, "
+                f"Super 8mm texture. Colors bleeding and melting at every edge, "
+                f"watercolor-wet brushstrokes visible. Soft white vignette frames the memory. "
+                f"Painted elements bob gently in thick golden haze. A fading, warm, half-remembered feeling."
             )
         return (
             f"Surreal dreamscape with melting forms and stained-glass light, "
