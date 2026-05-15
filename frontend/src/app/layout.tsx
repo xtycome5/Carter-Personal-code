@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/layout/AuthProvider";
-import Navbar from "@/components/layout/Navbar";
+import Sidebar from "@/components/layout/Sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Dream Recorder - AI Dream Visualizer",
-  description: "Turn your dreams into stunning images and videos with AI",
+  description: "Turn your dreams into stunning surreal images and videos with AI",
 };
 
 export default function RootLayout({
@@ -29,12 +29,11 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#0a0a1a]">
+      <body className="min-h-full">
         <AuthProvider>
-          <Navbar />
-          <main className="flex-1 pt-16">{children}</main>
+          <Sidebar />
+          {children}
         </AuthProvider>
-        <div className="particle-bg" />
       </body>
     </html>
   );

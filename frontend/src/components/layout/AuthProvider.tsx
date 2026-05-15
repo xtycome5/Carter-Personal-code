@@ -19,12 +19,16 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     if (!isLoading && !user && !publicPaths.includes(pathname)) {
       router.push("/auth");
     }
+    // If logged in and on landing or auth page, redirect to create
+    if (!isLoading && user && (pathname === "/" || pathname === "/auth")) {
+      router.push("/create");
+    }
   }, [isLoading, user, pathname, router]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a1a]">
-        <div className="w-8 h-8 border-2 border-[#6366f1] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#7c5cfc] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
