@@ -28,36 +28,30 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
 export const adminAPI = {
   // Dashboard
   getStats: () => request<any>('/admin/stats'),
+  getRecentGenerations: (limit = 10) => request<any>(`/admin/recent-generations?limit=${limit}`),
 
   // Artists
-  listArtists: () => request<any[]>('/admin/artists'),
+  listArtists: () => request<any>('/admin/artists'),
   createArtist: (data: any) => request<any>('/admin/artists', { method: 'POST', body: JSON.stringify(data) }),
   updateArtist: (id: string, data: any) => request<any>(`/admin/artists/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteArtist: (id: string) => request<void>(`/admin/artists/${id}`, { method: 'DELETE' }),
 
-  // Content
-  listGenerations: (params?: { page?: number; status?: string }) => {
-    const query = new URLSearchParams(params as any).toString();
+  // Content / Generations
+  listGenerations: (params?: { page?: number; status?: string; gen_type?: string }) => {
+    const clean: Record<string, string> = {};
+    if (params?.page) clean.page = String(params.page);
+    if (params?.status) clean.status = params.status;
+    if (params?.gen_type) clean.gen_type = params.gen_type;
+    const query = new URLSearchParams(clean).toString();
     return request<any>(`/admin/generations?${query}`);
   },
-  updateGenerationStatus: (id: string, status: string) =>
-    request<any>(`/admin/generations/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
 
   // Users
   listUsers: (params?: { page?: number; search?: string }) => {
-    const query = new URLSearchParams(params as any).toString();
+    const clean: Record<string, string> = {};
+    if (params?.page) clean.page = String(params.page);
+    if (params?.search) clean.search = params.search;
+    const query = new URLSearchParams(clean).toString();
     return request<any>(`/admin/users?${query}`);
-  },
-  banUser: (id: string) => request<any>(`/admin/users/${id}/ban`, { method: 'POST' }),
-  unbanUser: (id: string) => request<any>(`/admin/users/${id}/unban`, { method: 'POST' }),
-
-  // Model Monitor
-  getModelStats: (params?: { model?: string; timeRange?: string }) => {
-    const query = new URLSearchParams(params as any).toString();
-    return request<any>(`/admin/model-stats?${query}`);
-  },
-  listApiCalls: (params?: { model?: string; page?: number }) => {
-    const query = new URLSearchParams(params as any).toString();
-    return request<any>(`/admin/api-calls?${query}`);
   },
 };

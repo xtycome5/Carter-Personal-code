@@ -1,53 +1,41 @@
-import { useState } from 'react';
-import { Card, Table, Tag, Button, Input, Space, Avatar, Popconfirm, message } from 'antd';
-import { SearchOutlined, StopOutlined, CheckCircleOutlined } from '@ant-design/icons';
-
-interface User {
-  id: string;
-  email: string;
-  nickname: string;
-  avatarUrl?: string;
-  status: 'active' | 'banned';
-  dreamsCount: number;
-  imagesCount: number;
-  videosCount: number;
-  createdAt: string;
-  lastActive: string;
-}
-
-const mockUsers: User[] = [
-  { id: 'bc1c4239', email: 'carter@example.com', nickname: 'Carter', status: 'active', dreamsCount: 45, imagesCount: 78, videosCount: 42, createdAt: '2026-05-10', lastActive: '2026-05-15 16:47' },
-  { id: 'a1b2c3d4', email: 'alice@gmail.com', nickname: 'Alice', status: 'active', dreamsCount: 12, imagesCount: 24, videosCount: 8, createdAt: '2026-05-12', lastActive: '2026-05-15 14:30' },
-  { id: 'e5f6g7h8', email: 'spammer@test.com', nickname: 'BadUser', status: 'banned', dreamsCount: 3, imagesCount: 6, videosCount: 0, createdAt: '2026-05-14', lastActive: '2026-05-14 09:00' },
-];
+import { useEffect, useState } from 'react';
+import { Card, Table, Tag, Input, Space, Avatar, Spin } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
+import { adminAPI } from '../lib/api';
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
-  const filteredUsers = users.filter(u =>
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    u.nickname.toLowerCase().includes(search.toLowerCase())
-  );
+  const fetchUsers = (p: number, s: string) => {
+    setLoading(true);
+    adminAPI.listUsers({ page: p, search: s || undefined })
+      .then(res => {
+        setUsers(res.users || []);
+        setTotal(res.total || 0);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
 
-  const toggleBan = (id: string) => {
-    setUsers(users.map(u => {
-      if (u.id === id) {
-        const newStatus = u.status === 'active' ? 'banned' : 'active';
-        message.success(`User ${newStatus === 'banned' ? 'banned' : 'unbanned'}`);
-        return { ...u, status: newStatus as 'active' | 'banned' };
-      }
-      return u;
-    }));
+  useEffect(() => { fetchUsers(1, ''); }, []);
+
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setPage(1);
+    fetchUsers(1, value);
   };
 
   const columns = [
     {
       title: 'User',
       key: 'user',
-      render: (_: any, record: User) => (
+      render: (_: any, record: any) => (
         <Space>
-          <Avatar style={{ backgroundColor: '#7c5cfc' }}>{record.nickname[0]}</Avatar>
+          <Avatar style={{ backgroundColor: '#7c5cfc' }}>{(record.nickname || '?')[0]}</Avatar>
           <div>
             <div style={{ color: '#f0f0f5', fontSize: 13 }}>{record.nickname}</div>
             <div style={{ color: '#6b7280', fontSize: 11 }}>{record.email}</div>
@@ -56,43 +44,27 @@ export default function UsersPage() {
       ),
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (v: string) => (
-        <Tag color={v === 'active' ? 'green' : 'red'}>{v}</Tag>
-      ),
+      title: 'Provider',
+      dataIndex: 'oauth_provider',
+      key: 'oauth_provider',
+      render: (v: string) => v ? <Tag>{v}</Tag> : <Tag color="default">email</Tag>,
     },
     {
       title: 'Usage',
       key: 'usage',
-      render: (_: any, record: User) => (
+      render: (_: any, record: any) => (
         <Space size={12}>
-          <span style={{ color: '#9ca3af', fontSize: 12 }}>{record.dreamsCount} dreams</span>
-          <span style={{ color: '#9ca3af', fontSize: 12 }}>{record.imagesCount} imgs</span>
-          <span style={{ color: '#9ca3af', fontSize: 12 }}>{record.videosCount} vids</span>
+          <span style={{ color: '#9ca3af', fontSize: 12 }}>{record.dreams_count} dreams</span>
+          <span style={{ color: '#9ca3af', fontSize: 12 }}>{record.images_count} imgs</span>
+          <span style={{ color: '#9ca3af', fontSize: 12 }}>{record.videos_count} vids</span>
         </Space>
       ),
     },
-    { title: 'Joined', dataIndex: 'createdAt', key: 'createdAt' },
-    { title: 'Last Active', dataIndex: 'lastActive', key: 'lastActive' },
     {
-      title: 'Actions',
-      key: 'actions',
-      render: (_: any, record: User) => (
-        <Popconfirm
-          title={record.status === 'active' ? 'Ban this user?' : 'Unban this user?'}
-          onConfirm={() => toggleBan(record.id)}
-        >
-          <Button
-            size="small"
-            icon={record.status === 'active' ? <StopOutlined /> : <CheckCircleOutlined />}
-            danger={record.status === 'active'}
-          >
-            {record.status === 'active' ? 'Ban' : 'Unban'}
-          </Button>
-        </Popconfirm>
-      ),
+      title: 'Joined',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (v: string) => v ? new Date(v).toLocaleDateString() : '-',
     },
   ];
 
@@ -102,26 +74,33 @@ export default function UsersPage() {
         <div>
           <h2 style={{ color: '#f0f0f5', margin: 0 }}>用户管理</h2>
           <p style={{ color: '#9ca3af', fontSize: 13, margin: '4px 0 0' }}>
-            {users.length} registered users
+            {total} registered users
           </p>
         </div>
-        <Input
+        <Input.Search
           prefix={<SearchOutlined />}
           placeholder="Search by email or nickname..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ width: 260 }}
+          onSearch={handleSearch}
+          style={{ width: 280 }}
+          allowClear
         />
       </div>
 
       <Card>
-        <Table
-          dataSource={filteredUsers}
-          columns={columns}
-          rowKey="id"
-          pagination={{ pageSize: 20 }}
-          size="small"
-        />
+        <Spin spinning={loading}>
+          <Table
+            dataSource={users}
+            columns={columns}
+            rowKey="id"
+            pagination={{
+              current: page,
+              total,
+              pageSize: 20,
+              onChange: (p) => { setPage(p); fetchUsers(p, search); },
+            }}
+            size="small"
+          />
+        </Spin>
       </Card>
     </div>
   );

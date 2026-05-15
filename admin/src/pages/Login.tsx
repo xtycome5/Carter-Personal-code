@@ -5,18 +5,27 @@ import { LockOutlined, UserOutlined } from '@ant-design/icons';
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
-  const onFinish = (values: { email: string; password: string }) => {
+  const onFinish = async (values: { email: string; password: string }) => {
     setLoading(true);
-    // TODO: real admin auth
-    setTimeout(() => {
-      if (values.email === 'admin@dreamrecorder.xyz' && values.password === 'admin123') {
-        localStorage.setItem('admin_token', 'mock-admin-token');
-        window.location.href = '/dashboard';
-      } else {
-        message.error('Invalid credentials');
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        message.error(data.detail || 'Login failed');
+        return;
       }
+      // Store token and redirect
+      localStorage.setItem('admin_token', data.access_token);
+      window.location.href = '/admin/dashboard';
+    } catch (e: any) {
+      message.error(e.message || 'Network error');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   return (

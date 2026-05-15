@@ -1,29 +1,28 @@
-import { Card, Row, Col, Statistic, Table, Tag } from 'antd';
+import { useEffect, useState } from 'react';
+import { Card, Row, Col, Statistic, Table, Tag, Spin } from 'antd';
 import {
   PictureOutlined,
   VideoCameraOutlined,
   UserOutlined,
-  CloudOutlined,
+  FireOutlined,
 } from '@ant-design/icons';
+import { adminAPI } from '../lib/api';
 
 export default function DashboardPage() {
-  // TODO: fetch from API
-  const stats = {
-    totalUsers: 12,
-    totalDreams: 87,
-    totalImages: 156,
-    totalVideos: 89,
-    ossUsageMB: 2340,
-    successRate: 94.2,
-  };
+  const [stats, setStats] = useState<any>(null);
+  const [recent, setRecent] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const recentGenerations = [
-    { id: '71194129', type: 'video', user: 'carter', status: 'completed', created: '2026-05-15 16:47' },
-    { id: 'b7cf5e0d', type: 'image', user: 'carter', status: 'completed', created: '2026-05-15 16:46' },
-    { id: '36be195f', type: 'video', user: 'carter', status: 'completed', created: '2026-05-15 16:34' },
-    { id: '890ebf60', type: 'image', user: 'carter', status: 'completed', created: '2026-05-15 16:33' },
-    { id: '64eb837c', type: 'video', user: 'carter', status: 'failed', created: '2026-05-15 16:26' },
-  ];
+  useEffect(() => {
+    Promise.all([
+      adminAPI.getStats(),
+      adminAPI.getRecentGenerations(),
+    ]).then(([s, r]) => {
+      setStats(s);
+      setRecent(r.generations || []);
+    }).catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', render: (v: string) => v.slice(0, 8) },
@@ -38,10 +37,14 @@ export default function DashboardPage() {
     { title: 'User', dataIndex: 'user', key: 'user' },
     {
       title: 'Status', dataIndex: 'status', key: 'status',
-      render: (v: string) => <Tag color={v === 'completed' ? 'green' : 'red'}>{v}</Tag>,
+      render: (v: string) => (
+        <Tag color={v === 'completed' ? 'green' : v === 'failed' ? 'red' : 'orange'}>{v}</Tag>
+      ),
     },
-    { title: 'Created', dataIndex: 'created', key: 'created' },
+    { title: 'Created', dataIndex: 'created_at', key: 'created_at', render: (v: string) => v ? new Date(v).toLocaleString() : '-' },
   ];
+
+  if (loading) return <Spin size="large" style={{ display: 'block', margin: '100px auto' }} />;
 
   return (
     <div>
@@ -50,22 +53,22 @@ export default function DashboardPage() {
       <Row gutter={[16, 16]}>
         <Col span={6}>
           <Card>
-            <Statistic title="Total Users" value={stats.totalUsers} prefix={<UserOutlined />} />
+            <Statistic title="Total Users" value={stats?.total_users || 0} prefix={<UserOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Total Images" value={stats.totalImages} prefix={<PictureOutlined />} valueStyle={{ color: '#7c5cfc' }} />
+            <Statistic title="Total Images" value={stats?.total_images || 0} prefix={<PictureOutlined />} valueStyle={{ color: '#7c5cfc' }} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Total Videos" value={stats.totalVideos} prefix={<VideoCameraOutlined />} valueStyle={{ color: '#3b82f6' }} />
+            <Statistic title="Total Videos" value={stats?.total_videos || 0} prefix={<VideoCameraOutlined />} valueStyle={{ color: '#3b82f6' }} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="OSS Storage" value={stats.ossUsageMB} suffix="MB" prefix={<CloudOutlined />} />
+            <Statistic title="Success Rate" value={stats?.success_rate || 0} suffix="%" prefix={<FireOutlined />} valueStyle={{ color: '#10b981' }} />
           </Card>
         </Col>
       </Row>
@@ -73,19 +76,19 @@ export default function DashboardPage() {
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col span={12}>
           <Card>
-            <Statistic title="Success Rate" value={stats.successRate} suffix="%" valueStyle={{ color: '#10b981' }} />
+            <Statistic title="Total Dreams" value={stats?.total_dreams || 0} />
           </Card>
         </Col>
         <Col span={12}>
           <Card>
-            <Statistic title="Total Dreams" value={stats.totalDreams} />
+            <Statistic title="Failed" value={stats?.failed || 0} valueStyle={{ color: '#ef4444' }} />
           </Card>
         </Col>
       </Row>
 
       <Card title="Recent Generations" style={{ marginTop: 24 }}>
         <Table
-          dataSource={recentGenerations}
+          dataSource={recent}
           columns={columns}
           rowKey="id"
           pagination={false}

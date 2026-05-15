@@ -1,53 +1,43 @@
-import { useState } from 'react';
-import { Card, Table, Button, Tag, Space, Image, Tabs, Badge, message } from 'antd';
-import { CheckOutlined, CloseOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
-
-interface Generation {
-  id: string;
-  type: 'image' | 'video';
-  user: string;
-  dreamTitle: string;
-  resultUrl: string;
-  status: 'pending_review' | 'approved' | 'rejected' | 'featured';
-  createdAt: string;
-}
-
-const mockData: Generation[] = [
-  { id: '71194129', type: 'video', user: 'carter', dreamTitle: '星空下的海洋', resultUrl: 'https://dream-recorder-media.oss-ap-southeast-5.aliyuncs.com/videos/bc1c4239/71194129.mp4', status: 'pending_review', createdAt: '2026-05-15 16:47' },
-  { id: 'b7cf5e0d', type: 'image', user: 'carter', dreamTitle: '星空下的海洋', resultUrl: 'https://dream-recorder-media.oss-ap-southeast-5.aliyuncs.com/images/bc1c4239/b7cf5e0d.png', status: 'approved', createdAt: '2026-05-15 16:46' },
-  { id: '890ebf60', type: 'image', user: 'carter', dreamTitle: '飞翔的城市', resultUrl: 'https://dream-recorder-media.oss-ap-southeast-5.aliyuncs.com/images/bc1c4239/890ebf60.png', status: 'featured', createdAt: '2026-05-15 16:33' },
-  { id: '64eb837c', type: 'video', user: 'carter', dreamTitle: '深海珊瑚', resultUrl: '', status: 'rejected', createdAt: '2026-05-15 16:26' },
-  { id: 'a9aeadea', type: 'image', user: 'carter', dreamTitle: '深海珊瑚', resultUrl: 'https://dream-recorder-media.oss-ap-southeast-5.aliyuncs.com/images/bc1c4239/a9aeadea.png', status: 'pending_review', createdAt: '2026-05-15 16:25' },
-];
+import { useEffect, useState } from 'react';
+import { Card, Table, Tag, Image, Tabs, Spin } from 'antd';
+import { PictureOutlined, VideoCameraOutlined } from '@ant-design/icons';
+import { adminAPI } from '../lib/api';
 
 export default function ContentReviewPage() {
-  const [data, setData] = useState<Generation[]>(mockData);
-  const [tab, setTab] = useState('all');
+  const [data, setData] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
 
-  const filteredData = tab === 'all' ? data :
-    tab === 'pending' ? data.filter(d => d.status === 'pending_review') :
-    tab === 'featured' ? data.filter(d => d.status === 'featured') :
-    data;
-
-  const updateStatus = (id: string, status: Generation['status']) => {
-    setData(data.map(d => d.id === id ? { ...d, status } : d));
-    message.success(`Status updated to ${status}`);
+  const fetchData = (p: number, status?: string, type?: string) => {
+    setLoading(true);
+    adminAPI.listGenerations({ page: p, status, gen_type: type })
+      .then(res => {
+        setData(res.generations || []);
+        setTotal(res.total || 0);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   };
 
-  const statusColors: Record<string, string> = {
-    pending_review: 'orange',
-    approved: 'green',
-    rejected: 'red',
-    featured: 'gold',
+  useEffect(() => { fetchData(1); }, []);
+
+  const handleTabChange = (key: string) => {
+    const s = key === 'all' ? undefined : key;
+    setStatusFilter(s);
+    setPage(1);
+    fetchData(1, s, typeFilter);
   };
 
   const columns = [
     {
       title: 'Preview',
-      dataIndex: 'resultUrl',
+      dataIndex: 'result_url',
       key: 'preview',
       width: 80,
-      render: (url: string, record: Generation) => (
+      render: (url: string, record: any) => (
         url && record.type === 'image' ? (
           <Image src={url} width={60} height={60} style={{ objectFit: 'cover', borderRadius: 6 }} />
         ) : (
@@ -57,80 +47,68 @@ export default function ContentReviewPage() {
         )
       ),
     },
-    { title: 'Dream', dataIndex: 'dreamTitle', key: 'dreamTitle' },
+    { title: 'Dream', dataIndex: 'dream_title', key: 'dream_title', ellipsis: true },
     {
       title: 'Type',
       dataIndex: 'type',
       key: 'type',
-      render: (v: string) => <Tag color={v === 'image' ? 'purple' : 'blue'}>{v}</Tag>,
+      render: (v: string) => (
+        <Tag color={v === 'image' ? 'purple' : 'blue'}>
+          {v === 'image' ? <PictureOutlined /> : <VideoCameraOutlined />} {v}
+        </Tag>
+      ),
     },
     { title: 'User', dataIndex: 'user', key: 'user' },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (v: string) => <Tag color={statusColors[v]}>{v.replace('_', ' ')}</Tag>,
+      render: (v: string) => {
+        const colors: Record<string, string> = { completed: 'green', failed: 'red', processing: 'orange', pending: 'default' };
+        return <Tag color={colors[v] || 'default'}>{v}</Tag>;
+      },
     },
-    { title: 'Created', dataIndex: 'createdAt', key: 'createdAt' },
     {
-      title: 'Actions',
-      key: 'actions',
-      render: (_: any, record: Generation) => (
-        <Space>
-          {record.status !== 'approved' && record.status !== 'featured' && (
-            <Button size="small" icon={<CheckOutlined />} onClick={() => updateStatus(record.id, 'approved')}>
-              Approve
-            </Button>
-          )}
-          {record.status !== 'rejected' && (
-            <Button size="small" icon={<CloseOutlined />} danger onClick={() => updateStatus(record.id, 'rejected')}>
-              Reject
-            </Button>
-          )}
-          {record.status === 'approved' && (
-            <Button size="small" icon={<StarOutlined />} style={{ color: '#faad14' }} onClick={() => updateStatus(record.id, 'featured')}>
-              Feature
-            </Button>
-          )}
-          {record.status === 'featured' && (
-            <Button size="small" icon={<StarFilled />} style={{ color: '#faad14' }} onClick={() => updateStatus(record.id, 'approved')}>
-              Unfeature
-            </Button>
-          )}
-        </Space>
-      ),
+      title: 'Created',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (v: string) => v ? new Date(v).toLocaleString() : '-',
     },
   ];
-
-  const pendingCount = data.filter(d => d.status === 'pending_review').length;
-  const featuredCount = data.filter(d => d.status === 'featured').length;
 
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <h2 style={{ color: '#f0f0f5', margin: 0 }}>内容审核 / Daily Top 20</h2>
+        <h2 style={{ color: '#f0f0f5', margin: 0 }}>内容审核</h2>
         <p style={{ color: '#9ca3af', fontSize: 13, margin: '4px 0 0' }}>
-          审核生成内容，精选作品加入 Daily Top 20 展示
+          {total} total generations
         </p>
       </div>
 
       <Card>
         <Tabs
-          activeKey={tab}
-          onChange={setTab}
+          onChange={handleTabChange}
           items={[
             { key: 'all', label: 'All' },
-            { key: 'pending', label: <Badge count={pendingCount} size="small" offset={[8, 0]}>Pending</Badge> },
-            { key: 'featured', label: <span><StarFilled style={{ color: '#faad14' }} /> Featured ({featuredCount})</span> },
+            { key: 'completed', label: 'Completed' },
+            { key: 'failed', label: 'Failed' },
+            { key: 'processing', label: 'Processing' },
           ]}
         />
-        <Table
-          dataSource={filteredData}
-          columns={columns}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-          size="small"
-        />
+        <Spin spinning={loading}>
+          <Table
+            dataSource={data}
+            columns={columns}
+            rowKey="id"
+            pagination={{
+              current: page,
+              total,
+              pageSize: 20,
+              onChange: (p) => { setPage(p); fetchData(p, statusFilter, typeFilter); },
+            }}
+            size="small"
+          />
+        </Spin>
       </Card>
     </div>
   );

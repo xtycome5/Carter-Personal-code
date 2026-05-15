@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.session import init_db
-from app.api.routes import auth, dreams, generate
+from app.api.routes import auth, dreams, generate, admin
 
 
 @asynccontextmanager
@@ -27,7 +27,7 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://localhost:3000"],
+    allow_origins=[settings.FRONTEND_URL, "http://localhost:3000", "http://localhost:3001", "http://147.139.134.10"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,6 +37,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(dreams.router)
 app.include_router(generate.router)
+app.include_router(admin.router)
 
 
 @app.get("/")
