@@ -19,6 +19,7 @@ from app.schemas.schemas import (
 )
 from app.core.security import get_current_user
 from app.services.ai_service import dashscope_service
+from app.services.storage_service import oss_storage_service
 
 router = APIRouter(prefix="/api/generate", tags=["generate"])
 
@@ -289,7 +290,16 @@ async def check_generation_status(
         # 更新本地状态
         if dash_status == "SUCCEEDED":
             generation.status = "completed"
-            generation.result_url = task_result.get("result_url", "")
+            temp_url = task_result.get("result_url", "")
+            
+            # Persist to OSS (download temp URL → upload to permanent storage)
+            permanent_url = await oss_storage_service.persist(
+                temp_url=temp_url,
+                user_id=user_id,
+                generation_id=str(generation.id),
+                media_type=generation.type,
+            )
+            generation.result_url = permanent_url or temp_url
         elif dash_status == "FAILED":
             generation.status = "failed"
         # PENDING / RUNNING 保持 processing

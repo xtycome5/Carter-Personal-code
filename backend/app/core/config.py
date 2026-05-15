@@ -34,6 +34,13 @@ class Settings(BaseSettings):
     # Frontend
     FRONTEND_URL: str = "http://localhost:3000"
 
+    # Alibaba Cloud OSS
+    OSS_ACCESS_KEY_ID: str = ""
+    OSS_ACCESS_KEY_SECRET: str = ""
+    OSS_ENDPOINT: str = "https://oss-ap-southeast-5.aliyuncs.com"  # Jakarta, same region as ECS
+    OSS_BUCKET_NAME: str = "dream-recorder-media"
+    OSS_CUSTOM_DOMAIN: str = ""  # Optional: CDN domain like "media.dreamrecorder.xyz"
+
     class Config:
         env_file = ".env"
         extra = "ignore"
