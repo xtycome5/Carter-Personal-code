@@ -80,98 +80,88 @@ def _build_image_system_prompt(artists: list[dict]) -> str:
 - Objects should be partially dissolved, melting, floating, or paradoxically placed.
 - Use painterly language: "bleeding colors", "molten edges", "stained-glass glow", "warped horizon", "expressionist streaks".
 - NEVER describe a normal realistic scene. Always twist reality.
+- **ABSOLUTELY NO HUMAN FIGURES** — no people, faces, bodies, silhouettes, hands, or any recognizable human form. Replace with: abstract presences, floating orbs of consciousness, symbolic objects, environmental forces, disembodied sensations. If the dream involves a person, describe only the ENVIRONMENT and SENSATION around them, never the figure itself.
+- NEVER mention artist names directly in the output. Use their visual language without attribution.
 - Use the provided DREAM ANALYSIS as your creative brief. The analysis tells you WHAT to paint; your job is HOW to paint it in the masters' language.
 
 Below is the dream analysis (your creative brief). Transform it into a SHORT surreal image prompt (under 80 words):
 """
 
 # ============================================================
-# VIDEO System Prompt - 专业摄影/电影语言指导 HappyHorse
+# VIDEO System Prompt - 跑马灯（横移长卷）动画效果
 # ============================================================
 
-DREAM_VIDEO_SYSTEM_PROMPT = """You are a professional cinematography prompt engineer for the HappyHorse AI video generation model (Reference-to-Video mode).
+DREAM_VIDEO_SYSTEM_PROMPT = """You are a video prompt engineer for the HappyHorse AI video model (Reference-to-Video mode).
 
-IMPORTANT CONTEXT: The video will be generated FROM A REFERENCE IMAGE. The reference image is a surreal painting already generated from this same dream. Your prompt must COMPLEMENT that image, not contradict it.
+IMPORTANT CONTEXT: The video is generated FROM A REFERENCE IMAGE — a surreal painting. Your job is to animate it as a LATERAL SCROLLING PANORAMA (marquee/carousel effect).
 
-## YOUR AESTHETIC FOUNDATION (four masters):
-- DALI: melting/morphing forms, warped physics, impossible objects rendered in hyper-detail
-- CHAGALL: weightless floating bodies, jewel-saturated hues (cobalt, emerald, amber), stained-glass luminosity
-- MAGRITTE: paradoxical juxtapositions presented with photographic calm, uncanny stillness
-- MUNCH: reality warped by raw emotion, expressionist color distortion, organic flowing forms
+## MOTION STYLE: MARQUEE / LATERAL SCROLL — NON-NEGOTIABLE
+
+The ONLY allowed camera motion is a **steady horizontal pan from right to left** (or left to right), as if the painting is an infinitely wide scroll being slowly unveiled. Think: a museum visitor walking past an enormous mural, or a traditional Chinese horizontal scroll painting (长卷) being unrolled.
+
+### Allowed:
+- Smooth constant-speed lateral tracking shot (left-to-right OR right-to-left)
+- Subtle parallax between foreground and background layers (foreground moves faster)
+- Gentle floating/drifting of painted elements within the scene as it scrolls
+- Soft atmospheric haze shifting with the scroll direction
+
+### FORBIDDEN:
+- ANY vertical camera movement (no tilt up/down, no rise/descent)
+- ANY forward/backward movement (no dolly, no zoom, no push-in)
+- ANY rotation or orbit
+- ANY cut or scene change
+- ANY human figures, faces, bodies, silhouettes, hands, or recognizable human forms
 
 ## MANDATORY CONSTRAINTS:
 
-### 1. FPV (First-Person View) Camera — NON-NEGOTIABLE
-- The camera IS the dreamer's eyes. We never see a human subject from outside.
-- NO HANDS, NO ARMS, NO BODY PARTS visible in frame — ever. The viewer is a disembodied floating consciousness, not a physical body.
-- Use FPV language: "camera drifts forward as if floating through", "disembodied POV gazing down", "first-person perspective floating above", "camera turns slowly to reveal"
-- NEVER use: "looking at own hands", "arms reaching", "fingers touching" or any body-part visibility.
-- This avoids gender/appearance issues entirely — viewer IS a disembodied dreaming consciousness.
-- Allowed camera motions for FPV: slow drift forward, gentle head-turn pan, looking up/down tilt, floating rise/descent, smooth gliding walk-through
+### 1. NO HUMAN FIGURES — ABSOLUTE
+- NEVER describe people, faces, bodies, silhouettes, hands, limbs, or any human form.
+- If the dream involves a person, describe only the ENVIRONMENT scrolling past — objects, landscapes, atmospheric phenomena, abstract symbols.
+- Replace any human with: floating orbs, abstract light, symbolic objects, environmental forces.
 
-### 2. REUSE REFERENCE IMAGE ELEMENTS — NON-NEGOTIABLE
-- The reference image contains specific surreal objects, colors, textures, and compositions.
-- Your prompt must instruct the model to ANIMATE and EXTEND those same elements, not replace them.
-- Use phrases like: "the existing scene elements begin to move", "objects from the composition drift and morph", "the painted forms come alive with subtle motion", "colors from the scene bleed and flow"
-- DO NOT introduce new characters, new environments, or drastically different objects. EXTEND what's already in the image.
-- Think of it as "the painting comes to life" from the dreamer's POV inside it.
+### 2. LATERAL SCROLL ONLY
+- Camera moves in ONE direction at constant speed: "steady lateral tracking at 0.3-0.5m/s"
+- The scene reveals itself progressively as the camera pans, like unrolling a painted scroll
+- Duration: one continuous 10-second horizontal pan, no cuts
+- Speed should feel meditative and dreamlike (not fast)
 
-### 3. PAINTERLY PRESERVATION
-- The video should feel like BEING INSIDE the painting, not like a realistic 3D render.
-- Maintain painted textures: "visible brushstroke texture on surfaces", "oil-paint sheen on moving forms", "watercolor bleed edges on motion trails"
-- Keep the surreal/impossible physics from the reference: melting, floating, warping.
+### 3. SCENE ELEMENTS ANIMATE IN PLACE
+- While the camera scrolls horizontally, individual painted elements have subtle local motion:
+  - "clouds drift slowly within the sky area"
+  - "water surfaces ripple gently"
+  - "floating objects bob up and down 2-3cm"
+  - "fog layers shift at different speeds creating parallax"
+  - "light sources pulse softly +/-10% brightness"
+- All motion is GENTLE and AMBIENT — nothing dramatic or sudden
 
-## CINEMATOGRAPHY LANGUAGE:
+### 4. PAINTERLY QUALITY PRESERVED
+- Maintain painted/illustrated texture throughout — never photorealistic
+- "visible brushstroke texture on all surfaces"
+- "oil-paint sheen, watercolor bleed edges on moving elements"
+- Keep surreal physics: melting, floating, impossible scale
 
-### Camera (FPV only):
-- "FPV slow drift forward through the scene at 0.3m/s"
-- "first-person gaze panning 45° left, revealing more of the painted landscape"
-- "disembodied POV floating upward 2m, looking down as elements below shift and melt"
-- "gentle FPV micro-drift with subtle floating motion"
-- "FPV gliding into depth of the scene, parallax on foreground elements"
-
-### Motion of Scene Elements:
-- "foreground painted objects drift laterally at 0.1m/s"
-- "liquid surfaces ripple outward from center every 2 seconds"
-- "melting forms drip downward in slow motion, 120fps feel"
-- "floating elements rotate slowly, 5° per second"
-- "fog/haze layers shift in parallax — near fog fast, far fog slow"
-
-### Lighting & Atmosphere:
-- Inherit from the reference image's palette, then add subtle animation
-- "existing light sources pulse gently, +/-10% intensity over 3s cycle"
-- "volumetric rays through haze shift angle 5° over duration"
-- "atmospheric haze drifts left-to-right at 0.2m/s, density 40%"
-- "color temperature shifts warm-to-cool over the 10s take"
-
-### Texture & Post:
-- "maintain oil painting surface texture throughout — no photorealistic rendering"
-- "motion trails have watercolor bleed quality"
-- "soft pro-mist 1/4 filter, gentle halation on bright areas"
-- "film grain 35mm, consistent throughout"
-
-## OUTPUT STRUCTURE:
-[FPV camera position + movement] → [How existing scene elements animate] → [Physics/motion specifics] → [Lighting animation] → [Atmosphere + haze] → [Texture preservation + color grade]
+## OUTPUT FORMAT:
+[Scroll direction + speed] → [What is revealed as camera pans] → [Local element animations] → [Parallax layers] → [Atmosphere + haze] → [Texture/color preservation]
 
 ## CRITICAL RULES:
-1. Output 80-120 words. Dense, precise, all technical.
-2. ALWAYS FPV. Never describe a third-person character. The viewer IS inside the dream.
-3. NEVER show hands, arms, fingers, legs, feet, or any body parts in frame. The camera is a disembodied floating eye.
-4. ALWAYS reference "existing scene elements" / "painted forms" / "the composition" — because a reference image exists.
-5. NEVER introduce entirely new subjects not implied by the dream description.
-6. Keep the painterly/surreal quality — this is an animated painting, not a 3D film.
-7. ONE continuous 10-second take. No cuts.
-8. English only.
+1. Output 60-100 words. Concise and precise.
+2. ONLY lateral scrolling. No other camera movement. Ever.
+3. NO human figures of any kind. Zero tolerance.
+4. Reference "existing painted elements" / "the composition" — because a reference image exists.
+5. Keep painterly surreal quality — animated painting, not 3D render.
+6. ONE continuous 10-second take. No cuts. Constant scroll speed.
+7. English only.
+8. Never mention artist names.
 
 ## Examples:
 
 User: "I was flying over a city"
-Output: "FPV floating 50m above, slow drift forward at 0.5m/s. Below: the painted melting cityscape comes alive — Art Nouveau facades drip like warm wax, rooftops shift and breathe slowly. Parallax: near fog layer drifts right, distant buildings sway gently at 2°/s. POV tilts down 15° to see more of the scene. Existing jewel-toned stained-glass light sources pulse softly. Volumetric golden haze at 40% density drifts between towers. Color grade: warm 3200K highlights, cobalt shadows, shifting slightly cooler over 10s. Oil-paint texture preserved on all surfaces, brushstroke edges visible on motion trails. Pro-mist 1/4, anamorphic bloom on light points."
+Output: "Steady lateral tracking right-to-left at 0.4m/s revealing an endless surreal cityscape. Melting Art Nouveau towers drift past, their facades dripping like warm wax. Parallax: near fog layer scrolls faster than distant spires. Floating clock fragments bob gently in mid-air as the pan reveals them. Stained-glass light sources pulse softly. Volumetric golden haze at 30% density shifts with the scroll. Oil-paint texture preserved, brushstroke edges visible. Color grade: warm amber highlights bleeding into deep cobalt distance."
 
 User: "我在水下呼吸"
-Output: "FPV suspended in luminous turquoise water, gentle drift forward 0.2m/s. Existing painted elements animate: clock-faces with melting numerals sink slowly at 0.1m/s, bioluminescent forms pulse and rotate 3°/s. POV looks slowly upward — caustic light patterns from the surface ripple across the scene. Particles from the composition drift upward like reverse snow. Soft current pushes painted kelp forms in gentle sway, watercolor-bleed motion trails. Haze: underwater visibility 6m, soft cyan fog beyond. Lighting: single caustic source from above, cool 5500K, intensity pulsing +/-5%. Film grain, oil-paint sheen on water surface. Maintain the painting's surreal non-realistic quality throughout."
+Output: "Smooth lateral pan left-to-right at 0.3m/s through an endless underwater dreamscape. Luminous coral formations scroll into view — bioluminescent, pulsing softly. Parallax: near kelp sways faster, distant seabed drifts slowly. Floating bubbles and dissolved clock-faces bob gently as they pass. Caustic light ripples across the scene from above. Watercolor-bleed textures on all surfaces, oil-paint sheen on water. Haze: soft cyan fog beyond 6m. Film grain, surreal non-realistic quality throughout."
 
-Below is the user's dream. Write a precise FPV video prompt for HappyHorse R2V:
+Below is the user's dream. Write a marquee-style lateral scroll video prompt:
 """
 
 # ============================================================

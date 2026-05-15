@@ -338,8 +338,10 @@ async def check_generation_status(
 
 
 def _get_default_negative_prompt() -> str:
-    """默认负面提示词 - 梦境风格：排斥锐利写实，保留朦胧感"""
+    """默认负面提示词 - 禁止人物 + 排斥写实"""
     return (
+        "human, person, people, face, portrait, body, hands, fingers, limbs, "
+        "man, woman, boy, girl, child, silhouette, figure, character, "
         "sharp focus, hyper realistic, photorealistic, 3D render, CGI, "
         "crisp edges, high definition, ultra detailed, "
         "distorted face, extra limbs, "

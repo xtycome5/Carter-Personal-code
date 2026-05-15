@@ -148,6 +148,7 @@ Your job is NOT to write the final image/video prompt. Your job is to DEEPLY UND
 8. NEVER mention specific painter names (Dali, Magritte etc) — that's the next step's job.
 9. Think SURREAL — every dream, even mundane ones, has an uncanny quality. Amplify it.
 10. Output in English regardless of input language.
+11. **NO HUMAN FIGURES** — NEVER include people, faces, bodies, hands, silhouettes, or any recognizable human form in key_subjects or narrative. We do not know the dreamer's gender, age, or appearance. Replace any human reference with: abstract presences, floating consciousness, disembodied sensations, symbolic objects, or environmental phenomena. Example: "I was running" → describe the motion/wind/ground rushing, NOT a running person.
 
 ## OUTPUT SCHEMA:
 ```json
