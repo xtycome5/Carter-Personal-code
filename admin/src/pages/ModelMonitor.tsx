@@ -18,12 +18,12 @@ const mockCalls: ApiCall[] = [
   { id: '1', model: 'qwen-plus', endpoint: 'creative_director', duration_ms: 2340, status: 'success', tokens_input: 1250, tokens_output: 680, timestamp: '2026-05-15 16:47:12' },
   { id: '2', model: 'qwen-plus', endpoint: 'prompt_expansion', duration_ms: 3120, status: 'success', tokens_input: 2100, tokens_output: 450, timestamp: '2026-05-15 16:47:15' },
   { id: '3', model: 'happyhorse-1.0-r2v', endpoint: 'video_generation', duration_ms: 145000, status: 'success', tokens_input: 0, tokens_output: 0, timestamp: '2026-05-15 16:47:18' },
-  { id: '4', model: 'qwen-image-2.0-pro', endpoint: 'image_generation', duration_ms: 32000, status: 'success', tokens_input: 0, tokens_output: 0, timestamp: '2026-05-15 16:46:05' },
+  { id: '4', model: 'wan2.7-image-pro', endpoint: 'image_generation', duration_ms: 45000, status: 'success', tokens_input: 0, tokens_output: 0, timestamp: '2026-05-15 16:46:05' },
   { id: '5', model: 'happyhorse-1.0-r2v', endpoint: 'video_generation', duration_ms: 0, status: 'failed', tokens_input: 0, tokens_output: 0, timestamp: '2026-05-15 16:26:00', error: 'DataInspectionFailed' },
   { id: '6', model: 'qwen-plus', endpoint: 'creative_director', duration_ms: 1890, status: 'success', tokens_input: 1180, tokens_output: 720, timestamp: '2026-05-15 16:25:50' },
   { id: '7', model: 'qwen-plus', endpoint: 'prompt_expansion', duration_ms: 2560, status: 'success', tokens_input: 1950, tokens_output: 520, timestamp: '2026-05-15 16:25:53' },
   { id: '8', model: 'happyhorse-1.0-r2v', endpoint: 'video_generation', duration_ms: 0, status: 'failed', tokens_input: 0, tokens_output: 0, timestamp: '2026-05-15 15:50:00', error: 'IPInfringementSuspect' },
-  { id: '9', model: 'qwen-image-2.0-pro', endpoint: 'image_generation', duration_ms: 28500, status: 'success', tokens_input: 0, tokens_output: 0, timestamp: '2026-05-15 15:48:00' },
+  { id: '9', model: 'wan2.7-image-pro', endpoint: 'image_generation', duration_ms: 42000, status: 'success', tokens_input: 0, tokens_output: 0, timestamp: '2026-05-15 15:48:00' },
   { id: '10', model: 'qwen-plus', endpoint: 'creative_director', duration_ms: 5200, status: 'timeout', tokens_input: 1300, tokens_output: 0, timestamp: '2026-05-15 14:30:00', error: 'Request timeout' },
 ];
 
@@ -52,7 +52,7 @@ export default function ModelMonitorPage() {
       dataIndex: 'model',
       key: 'model',
       render: (v: string) => {
-        const color = v.includes('qwen') ? 'purple' : v.includes('happyhorse') ? 'blue' : 'cyan';
+        const color = v.includes('qwen') ? 'purple' : v.includes('happyhorse') ? 'blue' : v.includes('wan') ? 'cyan' : 'default';
         return <Tag color={color}>{v}</Tag>;
       },
     },
