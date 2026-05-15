@@ -67,19 +67,18 @@ class DashScopeService:
         self,
         prompt: str,
         negative_prompt: Optional[str] = None,
-        size: str = "2048*2048",
+        size: str = "1024*1024",
         n: int = 1,
     ) -> str:
         """
-        同步调用 qwen-image-2.0-pro 生成图片，直接返回图片 URL
-        注意：qwen-image-2.0-pro 不支持异步模式，调用会阻塞直到生成完成（通常 10-30s）
-        支持尺寸: 2048*2048, 2688*1536, 1536*2688, 2368*1728, 1728*2368
+        异步调用 wan2.7-image-pro 生成图片，返回 task_id
+        wan2.7-image-pro 使用异步模式，需要前端轮询 check_task_status 获取结果
+        支持尺寸: 1024*1024, 720*1280, 1280*720, 768*1024, 1024*768
         """
-        url = f"{self.base_url}/api/v1/services/aigc/multimodal-generation/generation"
-        
-        # qwen-image-2.0-pro 使用 messages 格式
+        url = f"{self.base_url}/api/v1/services/aigc/image-generation/generation"
+
         content = [{"text": prompt}]
-        
+
         payload = {
             "model": settings.IMAGE_MODEL,
             "input": {
@@ -99,25 +98,20 @@ class DashScopeService:
         if negative_prompt:
             payload["parameters"]["negative_prompt"] = negative_prompt
 
-        # qwen-image-2.0-pro 是同步接口，不需要 X-DashScope-Async header
+        headers = {
+            **self.headers,
+            "X-DashScope-Async": "enable",
+        }
+
         logger.info(f"[T2I] POST {url} | model={payload['model']} | size={size} | prompt={prompt[:80]}...")
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(url, json=payload, headers=self.headers)
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, json=payload, headers=headers)
             response.raise_for_status()
             data = response.json()
-            
-            # 同步返回格式: output.choices[0].message.content[0].image
-            choices = data.get("output", {}).get("choices", [])
-            if choices:
-                msg_content = choices[0].get("message", {}).get("content", [])
-                for item in msg_content:
-                    if "image" in item:
-                        image_url = item["image"]
-                        logger.info(f"[T2I] SUCCESS | image_url={image_url[:80]}...")
-                        return image_url
-            
-            raise Exception(f"Unexpected response format: {data}")
+            task_id = data["output"]["task_id"]
+            logger.info(f"[T2I] task_id={task_id}")
+            return task_id
 
     async def generate_video(
         self,

@@ -143,8 +143,8 @@ async def generate_image(
                 },
             )
         else:
-            # 无视频 → 纯文生图 (qwen-image-2.0-pro, 同步直接返回 URL)
-            image_url = await dashscope_service.generate_image(
+            # 无视频 → 纯文生图 (wan2.7-image-pro, 异步)
+            task_id = await dashscope_service.generate_image(
                 prompt=expanded_prompt,
                 negative_prompt=data.negative_prompt or _get_default_negative_prompt(),
                 size=data.size,
@@ -152,7 +152,7 @@ async def generate_image(
             )
             gen_mode = "t2i"
 
-            # 先创建 Generation 记录拿到 ID（用于 OSS 路径）
+            # wan2.7-image-pro 是异步模式，保存 task_id，前端轮询状态
             generation = Generation(
                 dream_id=dream.id,
                 user_id=UUID(user_id),
@@ -160,8 +160,8 @@ async def generate_image(
                 style=data.style,
                 prompt=expanded_prompt,
                 negative_prompt=data.negative_prompt,
-                status="completed",
-                result_url=image_url,  # 临时先存 DashScope URL
+                status="processing",
+                task_id=task_id,
                 metadata_json={
                     "size": data.size,
                     "count": data.count,
@@ -169,18 +169,6 @@ async def generate_image(
                     "original_content": dream.content,
                 },
             )
-            db.add(generation)
-            await db.flush()  # flush 获取 generation.id
-
-            # 用真实 generation_id 持久化到 OSS
-            permanent_url = await oss_storage_service.persist(
-                temp_url=image_url,
-                user_id=user_id,
-                generation_id=str(generation.id),
-                media_type="image",
-            )
-            if permanent_url:
-                generation.result_url = permanent_url
 
         # ===== Step 4: 保存生成记录 =====
         db.add(generation)  # idempotent for already-tracked objects

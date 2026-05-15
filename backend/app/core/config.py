@@ -17,8 +17,8 @@ class Settings(BaseSettings):
     DASHSCOPE_BASE_URL: str = "https://dashscope-intl.aliyuncs.com"
     QWEN_MODEL: str = "qwen-plus"
     QWEN_VIDEO_PROMPT_MODEL: str = "qwen-plus"  # 视频提示词专用，可单独升级
-    IMAGE_MODEL: str = "qwen-image-2.0-pro"
-    IMAGE_PRO_MODEL: str = "wan2.7-image-pro"
+    IMAGE_MODEL: str = "wan2.7-image-pro"
+    IMAGE_PRO_MODEL: str = "wan2.7-image-pro"  # 参考生图也用同一模型
     VIDEO_MODEL: str = "happyhorse-1.0-t2v"
     VIDEO_I2V_MODEL: str = "happyhorse-1.0-i2v"
     VIDEO_R2V_MODEL: str = "happyhorse-1.0-r2v"
