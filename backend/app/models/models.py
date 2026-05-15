@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Text, Boolean, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, String, Text, Boolean, DateTime, ForeignKey, JSON, Integer, Float
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.db.session import Base
@@ -62,3 +62,23 @@ class Generation(Base):
     # Relationships
     dream = relationship("Dream", back_populates="generations")
     user = relationship("User", back_populates="generations")
+
+
+class ApiCallLog(Base):
+    """DashScope API 调用日志 — 用于模型监控面板"""
+    __tablename__ = "api_call_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model = Column(String(100), nullable=False, index=True)  # qwen-plus, wan2.7-image-pro, happyhorse-1.0-r2v
+    endpoint = Column(String(100), nullable=False)  # creative_director, prompt_expansion, image_generation, video_generation
+    method = Column(String(10), default="POST")  # POST, GET
+    status = Column(String(20), nullable=False)  # success, failed, timeout
+    duration_ms = Column(Integer, nullable=False, default=0)  # 调用耗时(毫秒)
+    tokens_input = Column(Integer, default=0)  # 输入 tokens（LLM 类）
+    tokens_output = Column(Integer, default=0)  # 输出 tokens（LLM 类）
+    error = Column(Text, nullable=True)  # 错误信息
+    request_payload = Column(JSON, nullable=True)  # 请求摘要（不含完整 prompt，只存 model/size 等）
+    response_summary = Column(JSON, nullable=True)  # 响应摘要（task_id/image_url 前缀等）
+    user_id = Column(UUID(as_uuid=True), nullable=True)  # 触发调用的用户（可选）
+    generation_id = Column(UUID(as_uuid=True), nullable=True)  # 关联的 Generation（可选）
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)

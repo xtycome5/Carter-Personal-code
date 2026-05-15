@@ -16,6 +16,7 @@ import random
 import httpx
 from typing import Optional, Literal
 from app.core.config import settings
+from app.services.api_logger import ApiCallTimer, log_api_call, fire_and_forget
 
 logger = logging.getLogger(__name__)
 
@@ -309,12 +310,20 @@ class PromptExpansionService:
             "top_p": 0.9,
         }
 
+        timer = ApiCallTimer()
+        timer.start()
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(url, json=payload, headers=self.headers)
                 response.raise_for_status()
                 data = response.json()
                 expanded = data["choices"][0]["message"]["content"].strip()
+                timer.stop()
+
+                # 提取 token 用量
+                usage = data.get("usage", {})
+                tokens_in = usage.get("prompt_tokens", 0)
+                tokens_out = usage.get("completion_tokens", 0)
 
                 # 清理输出
                 expanded = expanded.strip('"\'')
@@ -325,10 +334,22 @@ class PromptExpansionService:
                 result = expanded + suffix if suffix else expanded
 
                 logger.info(f"[PromptExpansion] type={gen_type} | model={model} | len={len(result)} | prompt={result[:100]}...")
+                fire_and_forget(log_api_call(
+                    model=model, endpoint=f"prompt_expansion_{gen_type}",
+                    status="success", duration_ms=timer.duration_ms,
+                    tokens_input=tokens_in, tokens_output=tokens_out,
+                    response_summary={"prompt_length": len(result)},
+                ))
                 return result
 
         except Exception as e:
+            timer.stop()
             logger.error(f"[PromptExpansion] LLM call failed: {e}, falling back to template")
+            fire_and_forget(log_api_call(
+                model=model, endpoint=f"prompt_expansion_{gen_type}",
+                status="failed", duration_ms=timer.duration_ms,
+                error=str(e)[:500],
+            ))
             return self._fallback_expand(content, gen_type)
 
 

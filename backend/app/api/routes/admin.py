@@ -1,16 +1,17 @@
 """
 Admin Routes - 后台管理 API
 
-提供 Dashboard 统计、用户管理、内容审核、画家池管理等接口。
+提供 Dashboard 统计、用户管理、内容审核、画家池管理、API调用监控等接口。
 当前用硬编码 admin 账号验证（后续可改为 role-based）。
 """
 from uuid import UUID
 from typing import Optional
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, case
+from sqlalchemy import select, func, case, desc
 from app.db.session import get_db
-from app.models.models import User, Dream, Generation
+from app.models.models import User, Dream, Generation, ApiCallLog
 from app.core.security import get_current_user
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -210,3 +211,162 @@ async def list_artists():
     """获取当前画家池配置"""
     from app.services.prompt_expansion import ARTIST_POOL
     return {"artists": ARTIST_POOL, "total": len(ARTIST_POOL)}
+
+
+# ===== API Call Monitoring =====
+@router.get("/api-calls")
+async def list_api_calls(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+    model: Optional[str] = None,
+    status: Optional[str] = None,
+    endpoint: Optional[str] = None,
+    hours: int = Query(24, ge=1, le=168),  # 默认最近24小时，最多7天
+    db: AsyncSession = Depends(get_db),
+):
+    """获取 API 调用日志列表"""
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    query = select(ApiCallLog).where(ApiCallLog.created_at >= since)
+
+    if model:
+        query = query.where(ApiCallLog.model == model)
+    if status:
+        query = query.where(ApiCallLog.status == status)
+    if endpoint:
+        query = query.where(ApiCallLog.endpoint == endpoint)
+
+    # Total count
+    count_query = select(func.count()).select_from(query.subquery())
+    total = await db.scalar(count_query)
+
+    # Paginate
+    query = query.order_by(desc(ApiCallLog.created_at))
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    result = await db.execute(query)
+    logs = result.scalars().all()
+
+    items = []
+    for log in logs:
+        items.append({
+            "id": str(log.id),
+            "model": log.model,
+            "endpoint": log.endpoint,
+            "status": log.status,
+            "duration_ms": log.duration_ms,
+            "tokens_input": log.tokens_input,
+            "tokens_output": log.tokens_output,
+            "error": log.error,
+            "request_payload": log.request_payload,
+            "response_summary": log.response_summary,
+            "created_at": log.created_at.isoformat() if log.created_at else None,
+        })
+
+    return {"calls": items, "total": total or 0, "page": page, "page_size": page_size}
+
+
+@router.get("/api-stats")
+async def get_api_stats(
+    hours: int = Query(24, ge=1, le=168),
+    db: AsyncSession = Depends(get_db),
+):
+    """API 调用统计聚合 — RPM, TPM, 平均延迟, 错误率, 按模型分组"""
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+
+    # 总体统计
+    total_calls = await db.scalar(
+        select(func.count()).select_from(ApiCallLog).where(ApiCallLog.created_at >= since)
+    ) or 0
+    success_calls = await db.scalar(
+        select(func.count()).select_from(ApiCallLog).where(
+            ApiCallLog.created_at >= since, ApiCallLog.status == "success"
+        )
+    ) or 0
+    failed_calls = total_calls - success_calls
+
+    # 平均延迟（仅成功的）
+    avg_latency = await db.scalar(
+        select(func.avg(ApiCallLog.duration_ms)).where(
+            ApiCallLog.created_at >= since, ApiCallLog.status == "success"
+        )
+    ) or 0
+
+    # Token 总计
+    total_tokens_in = await db.scalar(
+        select(func.sum(ApiCallLog.tokens_input)).where(ApiCallLog.created_at >= since)
+    ) or 0
+    total_tokens_out = await db.scalar(
+        select(func.sum(ApiCallLog.tokens_output)).where(ApiCallLog.created_at >= since)
+    ) or 0
+
+    # RPM 和 TPM（基于时间窗口）
+    minutes = hours * 60
+    rpm = round(total_calls / minutes, 2) if minutes > 0 else 0
+    tpm = round((total_tokens_in + total_tokens_out) / minutes, 2) if minutes > 0 else 0
+
+    # 按模型分组统计
+    model_stats_query = (
+        select(
+            ApiCallLog.model,
+            func.count().label("calls"),
+            func.avg(ApiCallLog.duration_ms).label("avg_latency"),
+            func.sum(case((ApiCallLog.status == "success", 1), else_=0)).label("successes"),
+            func.sum(case((ApiCallLog.status != "success", 1), else_=0)).label("failures"),
+            func.sum(ApiCallLog.tokens_input).label("tokens_in"),
+            func.sum(ApiCallLog.tokens_output).label("tokens_out"),
+        )
+        .where(ApiCallLog.created_at >= since)
+        .group_by(ApiCallLog.model)
+    )
+    model_result = await db.execute(model_stats_query)
+    model_rows = model_result.all()
+
+    model_breakdown = []
+    for row in model_rows:
+        model_breakdown.append({
+            "model": row.model,
+            "calls": row.calls,
+            "avg_latency_ms": round(row.avg_latency) if row.avg_latency else 0,
+            "successes": int(row.successes or 0),
+            "failures": int(row.failures or 0),
+            "error_rate": round(int(row.failures or 0) / row.calls * 100, 1) if row.calls > 0 else 0,
+            "tokens_in": int(row.tokens_in or 0),
+            "tokens_out": int(row.tokens_out or 0),
+        })
+
+    # 按 endpoint 分组
+    endpoint_stats_query = (
+        select(
+            ApiCallLog.endpoint,
+            func.count().label("calls"),
+            func.avg(ApiCallLog.duration_ms).label("avg_latency"),
+            func.sum(case((ApiCallLog.status != "success", 1), else_=0)).label("failures"),
+        )
+        .where(ApiCallLog.created_at >= since)
+        .group_by(ApiCallLog.endpoint)
+    )
+    endpoint_result = await db.execute(endpoint_stats_query)
+    endpoint_rows = endpoint_result.all()
+
+    endpoint_breakdown = []
+    for row in endpoint_rows:
+        endpoint_breakdown.append({
+            "endpoint": row.endpoint,
+            "calls": row.calls,
+            "avg_latency_ms": round(row.avg_latency) if row.avg_latency else 0,
+            "failures": int(row.failures or 0),
+        })
+
+    return {
+        "period_hours": hours,
+        "total_calls": total_calls,
+        "success_calls": success_calls,
+        "failed_calls": failed_calls,
+        "error_rate": round(failed_calls / total_calls * 100, 1) if total_calls > 0 else 0,
+        "avg_latency_ms": round(avg_latency),
+        "rpm": rpm,
+        "tpm": tpm,
+        "total_tokens_in": total_tokens_in,
+        "total_tokens_out": total_tokens_out,
+        "model_breakdown": model_breakdown,
+        "endpoint_breakdown": endpoint_breakdown,
+    }

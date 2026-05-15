@@ -18,6 +18,7 @@ import httpx
 from typing import Optional, Literal
 from dataclasses import dataclass, field, asdict
 from app.core.config import settings
+from app.services.api_logger import ApiCallTimer, log_api_call, fire_and_forget
 
 logger = logging.getLogger(__name__)
 
@@ -278,11 +279,19 @@ class CreativeDirectorService:
         }
 
         try:
+            timer = ApiCallTimer()
+            timer.start()
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(url, json=payload, headers=self.headers)
                 response.raise_for_status()
                 data = response.json()
                 raw_content = data["choices"][0]["message"]["content"].strip()
+                timer.stop()
+
+                # 提取 token 用量
+                usage = data.get("usage", {})
+                tokens_in = usage.get("prompt_tokens", 0)
+                tokens_out = usage.get("completion_tokens", 0)
 
                 # 解析 JSON
                 analysis_dict = json.loads(raw_content)
@@ -296,13 +305,31 @@ class CreativeDirectorService:
                     f"intensity={analysis.emotion_intensity} "
                     f"subjects={analysis.key_subjects[:3]}"
                 )
+                fire_and_forget(log_api_call(
+                    model=self.model, endpoint="creative_director",
+                    status="success", duration_ms=timer.duration_ms,
+                    tokens_input=tokens_in, tokens_output=tokens_out,
+                    response_summary={"emotion": analysis.primary_emotion, "intensity": analysis.emotion_intensity},
+                ))
                 return analysis
 
         except json.JSONDecodeError as e:
+            timer.stop()
             logger.error(f"[CreativeDirector] JSON parse failed: {e}, raw={raw_content[:200]}")
+            fire_and_forget(log_api_call(
+                model=self.model, endpoint="creative_director",
+                status="failed", duration_ms=timer.duration_ms,
+                error=f"JSON parse: {str(e)[:200]}",
+            ))
             return self._fallback_analysis(content)
         except Exception as e:
+            timer.stop()
             logger.error(f"[CreativeDirector] LLM call failed: {e}")
+            fire_and_forget(log_api_call(
+                model=self.model, endpoint="creative_director",
+                status="failed", duration_ms=timer.duration_ms,
+                error=str(e)[:500],
+            ))
             return self._fallback_analysis(content)
 
     def _fallback_analysis(self, content: str) -> DreamAnalysis:

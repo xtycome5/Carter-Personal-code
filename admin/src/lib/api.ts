@@ -54,4 +54,17 @@ export const adminAPI = {
     const query = new URLSearchParams(clean).toString();
     return request<any>(`/admin/users?${query}`);
   },
+
+  // API Call Monitoring
+  getApiCalls: (params?: { page?: number; model?: string; status?: string; endpoint?: string; hours?: number }) => {
+    const clean: Record<string, string> = {};
+    if (params?.page) clean.page = String(params.page);
+    if (params?.model) clean.model = params.model;
+    if (params?.status) clean.status = params.status;
+    if (params?.endpoint) clean.endpoint = params.endpoint;
+    if (params?.hours) clean.hours = String(params.hours);
+    const query = new URLSearchParams(clean).toString();
+    return request<any>(`/admin/api-calls?${query}`);
+  },
+  getApiStats: (hours = 24) => request<any>(`/admin/api-stats?hours=${hours}`),
 };

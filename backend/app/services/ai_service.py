@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 from app.core.config import settings
 from app.services.prompt_expansion import prompt_expansion_service
 from app.services.creative_director import creative_director_service
+from app.services.api_logger import ApiCallTimer, log_api_call, fire_and_forget
 
 
 class DashScopeService:
@@ -105,13 +106,31 @@ class DashScopeService:
 
         logger.info(f"[T2I] POST {url} | model={payload['model']} | size={size} | prompt={prompt[:80]}...")
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, json=payload, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            task_id = data["output"]["task_id"]
-            logger.info(f"[T2I] task_id={task_id}")
-            return task_id
+        timer = ApiCallTimer()
+        timer.start()
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(url, json=payload, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                task_id = data["output"]["task_id"]
+                timer.stop()
+                logger.info(f"[T2I] task_id={task_id}")
+                fire_and_forget(log_api_call(
+                    model=settings.IMAGE_MODEL, endpoint="image_generation",
+                    status="success", duration_ms=timer.duration_ms,
+                    request_payload={"size": size, "n": n},
+                    response_summary={"task_id": task_id},
+                ))
+                return task_id
+        except Exception as e:
+            timer.stop()
+            fire_and_forget(log_api_call(
+                model=settings.IMAGE_MODEL, endpoint="image_generation",
+                status="failed", duration_ms=timer.duration_ms,
+                error=str(e)[:500],
+            ))
+            raise
 
     async def generate_video(
         self,
@@ -121,41 +140,44 @@ class DashScopeService:
         duration: int = 10,
         ratio: str = "16:9",
     ) -> str:
-        """
-        文生视频 (T2V) - 异步提交视频生成任务，返回 task_id
-        无参考图，纯文本生成视频 (happyhorse-1.0-t2v)
-        """
+        """文生视频 (T2V) - 异步提交，返回 task_id"""
         url = f"{self.base_url}/api/v1/services/aigc/video-generation/video-synthesis"
 
         payload = {
             "model": settings.VIDEO_MODEL,
-            "input": {
-                "prompt": prompt,
-            },
-            "parameters": {
-                "resolution": resolution,
-                "ratio": ratio,
-                "duration": duration,
-            },
+            "input": {"prompt": prompt},
+            "parameters": {"resolution": resolution, "ratio": ratio, "duration": duration},
         }
-
         if negative_prompt:
             payload["input"]["negative_prompt"] = negative_prompt
 
-        headers = {
-            **self.headers,
-            "X-DashScope-Async": "enable",
-        }
-
+        headers = {**self.headers, "X-DashScope-Async": "enable"}
         logger.info(f"[T2V] POST {url} | model={payload['model']} | prompt={prompt[:80]}...")
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, json=payload, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            task_id = data["output"]["task_id"]
-            logger.info(f"[T2V] task_id={task_id}")
-            return task_id
+        timer = ApiCallTimer()
+        timer.start()
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(url, json=payload, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                task_id = data["output"]["task_id"]
+                timer.stop()
+                logger.info(f"[T2V] task_id={task_id}")
+                fire_and_forget(log_api_call(
+                    model=settings.VIDEO_MODEL, endpoint="video_generation_t2v",
+                    status="success", duration_ms=timer.duration_ms,
+                    request_payload={"resolution": resolution, "duration": duration, "ratio": ratio},
+                    response_summary={"task_id": task_id},
+                ))
+                return task_id
+        except Exception as e:
+            timer.stop()
+            fire_and_forget(log_api_call(
+                model=settings.VIDEO_MODEL, endpoint="video_generation_t2v",
+                status="failed", duration_ms=timer.duration_ms, error=str(e)[:500],
+            ))
+            raise
 
     async def generate_video_from_image(
         self,
@@ -166,42 +188,44 @@ class DashScopeService:
         duration: int = 10,
         ratio: str = "16:9",
     ) -> str:
-        """
-        图生视频 (I2V) - 以首帧图为基础生成视频，返回 task_id
-        当 dream 已有生成好的图片时使用此方法 (happyhorse-1.0-i2v)
-        """
+        """图生视频 (I2V) - 以首帧图为基础，返回 task_id"""
         url = f"{self.base_url}/api/v1/services/aigc/video-generation/video-synthesis"
 
         payload = {
             "model": settings.VIDEO_I2V_MODEL,
-            "input": {
-                "prompt": prompt,
-                "media": [{"type": "first_frame", "url": image_url}],
-            },
-            "parameters": {
-                "resolution": resolution,
-                "ratio": ratio,
-                "duration": duration,
-            },
+            "input": {"prompt": prompt, "media": [{"type": "first_frame", "url": image_url}]},
+            "parameters": {"resolution": resolution, "ratio": ratio, "duration": duration},
         }
-
         if negative_prompt:
             payload["input"]["negative_prompt"] = negative_prompt
 
-        headers = {
-            **self.headers,
-            "X-DashScope-Async": "enable",
-        }
-
+        headers = {**self.headers, "X-DashScope-Async": "enable"}
         logger.info(f"[I2V] POST {url} | model={payload['model']} | image={image_url[:60]}... | prompt={prompt[:60]}...")
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, json=payload, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            task_id = data["output"]["task_id"]
-            logger.info(f"[I2V] task_id={task_id}")
-            return task_id
+        timer = ApiCallTimer()
+        timer.start()
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(url, json=payload, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                task_id = data["output"]["task_id"]
+                timer.stop()
+                logger.info(f"[I2V] task_id={task_id}")
+                fire_and_forget(log_api_call(
+                    model=settings.VIDEO_I2V_MODEL, endpoint="video_generation_i2v",
+                    status="success", duration_ms=timer.duration_ms,
+                    request_payload={"resolution": resolution, "duration": duration},
+                    response_summary={"task_id": task_id},
+                ))
+                return task_id
+        except Exception as e:
+            timer.stop()
+            fire_and_forget(log_api_call(
+                model=settings.VIDEO_I2V_MODEL, endpoint="video_generation_i2v",
+                status="failed", duration_ms=timer.duration_ms, error=str(e)[:500],
+            ))
+            raise
 
     async def generate_video_from_reference(
         self,
@@ -212,46 +236,45 @@ class DashScopeService:
         duration: int = 10,
         ratio: str = "16:9",
     ) -> str:
-        """
-        参考生视频 (R2V) - 以参考图为风格/主体参考生成视频，返回 task_id
-        当用户先生图后生视频时使用此方法 (happyhorse-1.0-r2v)
-        
-        与 I2V 区别：I2V 以图片为首帧，R2V 以图片为风格/主体参考
-        """
+        """参考生视频 (R2V) - 以参考图为风格参考，返回 task_id"""
         url = f"{self.base_url}/api/v1/services/aigc/video-generation/video-synthesis"
 
         media = [{"type": "reference_image", "url": u} for u in reference_image_urls]
-
         payload = {
             "model": settings.VIDEO_R2V_MODEL,
-            "input": {
-                "prompt": prompt,
-                "media": media,
-            },
-            "parameters": {
-                "resolution": resolution,
-                "ratio": ratio,
-                "duration": duration,
-            },
+            "input": {"prompt": prompt, "media": media},
+            "parameters": {"resolution": resolution, "ratio": ratio, "duration": duration},
         }
-
         if negative_prompt:
             payload["input"]["negative_prompt"] = negative_prompt
 
-        headers = {
-            **self.headers,
-            "X-DashScope-Async": "enable",
-        }
-
+        headers = {**self.headers, "X-DashScope-Async": "enable"}
         logger.info(f"[R2V] POST {url} | model={payload['model']} | refs={[u[:50] for u in reference_image_urls]} | prompt={prompt[:60]}...")
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, json=payload, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            task_id = data["output"]["task_id"]
-            logger.info(f"[R2V] task_id={task_id}")
-            return task_id
+        timer = ApiCallTimer()
+        timer.start()
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(url, json=payload, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                task_id = data["output"]["task_id"]
+                timer.stop()
+                logger.info(f"[R2V] task_id={task_id}")
+                fire_and_forget(log_api_call(
+                    model=settings.VIDEO_R2V_MODEL, endpoint="video_generation_r2v",
+                    status="success", duration_ms=timer.duration_ms,
+                    request_payload={"resolution": resolution, "duration": duration},
+                    response_summary={"task_id": task_id},
+                ))
+                return task_id
+        except Exception as e:
+            timer.stop()
+            fire_and_forget(log_api_call(
+                model=settings.VIDEO_R2V_MODEL, endpoint="video_generation_r2v",
+                status="failed", duration_ms=timer.duration_ms, error=str(e)[:500],
+            ))
+            raise
 
     async def generate_image_from_reference(
         self,
@@ -261,52 +284,45 @@ class DashScopeService:
         size: str = "1024*1024",
         n: int = 1,
     ) -> str:
-        """
-        参考生图 (V2I) - 以参考图（视频帧）为基础生成图片，返回 task_id
-        当用户先生视频后生图时使用此方法 (wan2.7-image-pro)
-        
-        使用 messages 格式：content 中先放 image URL，再放 text prompt
-        """
+        """参考生图 (V2I) - 以参考图为基础，返回 task_id"""
         url = f"{self.base_url}/api/v1/services/aigc/image-generation/generation"
 
-        content = [
-            {"image": reference_image_url},
-            {"text": prompt},
-        ]
-
+        content = [{"image": reference_image_url}, {"text": prompt}]
         payload = {
             "model": settings.IMAGE_PRO_MODEL,
-            "input": {
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": content,
-                    }
-                ]
-            },
-            "parameters": {
-                "size": size,
-                "n": n,
-            },
+            "input": {"messages": [{"role": "user", "content": content}]},
+            "parameters": {"size": size, "n": n},
         }
-
         if negative_prompt:
             payload["parameters"]["negative_prompt"] = negative_prompt
 
-        headers = {
-            **self.headers,
-            "X-DashScope-Async": "enable",
-        }
-
+        headers = {**self.headers, "X-DashScope-Async": "enable"}
         logger.info(f"[V2I] POST {url} | model={payload['model']} | ref_img={reference_image_url[:60]}... | prompt={prompt[:60]}...")
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, json=payload, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            task_id = data["output"]["task_id"]
-            logger.info(f"[V2I] task_id={task_id}")
-            return task_id
+        timer = ApiCallTimer()
+        timer.start()
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(url, json=payload, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                task_id = data["output"]["task_id"]
+                timer.stop()
+                logger.info(f"[V2I] task_id={task_id}")
+                fire_and_forget(log_api_call(
+                    model=settings.IMAGE_PRO_MODEL, endpoint="image_generation_v2i",
+                    status="success", duration_ms=timer.duration_ms,
+                    request_payload={"size": size},
+                    response_summary={"task_id": task_id},
+                ))
+                return task_id
+        except Exception as e:
+            timer.stop()
+            fire_and_forget(log_api_call(
+                model=settings.IMAGE_PRO_MODEL, endpoint="image_generation_v2i",
+                status="failed", duration_ms=timer.duration_ms, error=str(e)[:500],
+            ))
+            raise
 
     async def check_task_status(self, task_id: str) -> dict:
         """查询异步任务状态"""
