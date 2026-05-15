@@ -2,8 +2,8 @@
 DashScope AI Service - 阿里云百炼 AI 接口封装
 支持：提示词扩写、图片生成(万相)、视频生成(万相)
 
-调用链路:
-  用户描述 → PromptExpansionService(LLM扩写) → 生图/生视频 API
+调用链路 (Two-Step Pipeline):
+  用户描述 → CreativeDirector(意图+场景分析) → PromptExpansion(画家池/FPV改写) → 生图/生视频 API
 """
 import httpx
 import logging
@@ -12,6 +12,7 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 from app.core.config import settings
 from app.services.prompt_expansion import prompt_expansion_service
+from app.services.creative_director import creative_director_service
 
 
 class DashScopeService:
@@ -31,25 +32,35 @@ class DashScopeService:
         mood: Optional[str] = None,
     ) -> str:
         """
-        提示词扩写 - 在调用生图/生视频之前必须先调用此方法
+        提示词扩写 - Two-Step Pipeline
         
-        将用户的梦境描述通过 LLM 智能扩写为高质量的图像/视频生成 prompt。
-        采用 Qwen-Image 官方方案：LLM 调用 + 结构化 System Prompt + Magic Tokens
+        Step 1 (Creative Director): 理解梦境意图、补全场景、输出结构化分析
+        Step 2 (Prompt Expansion): 基于结构化分析 + 画家池/FPV约束 生成最终 prompt
         
         Args:
             content: 用户原始梦境描述（中文或英文）
             gen_type: "image" 或 "video"
-            style: 风格选项 (surreal/watercolor/cyberpunk/classical/ghibli/gothic/dali/dreamlike)
-            mood: 情绪标记 (fantasy/peaceful/scary/sad/exciting/romantic/mysterious/nostalgic)
+            style: (保留参数兼容，不再使用)
+            mood: (保留参数兼容，不再使用)
         
         Returns:
             扩写后的完整 prompt，可直接传入生图/生视频 API
         """
+        # === Step 1: Creative Director 分析 ===
+        logger.info(f"[Pipeline] Step 1: Creative Director analyzing dream (gen_type={gen_type})")
+        dream_analysis = await creative_director_service.analyze(
+            content=content,
+            gen_type=gen_type,
+        )
+
+        # === Step 2: Prompt Expansion 改写 ===
+        logger.info(f"[Pipeline] Step 2: Prompt Expansion with dream analysis")
         return await prompt_expansion_service.expand(
             content=content,
             gen_type=gen_type,
             style=style,
             mood=mood,
+            dream_analysis=dream_analysis,
         )
 
     async def generate_image(

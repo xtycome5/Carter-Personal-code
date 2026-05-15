@@ -79,18 +79,9 @@ def _build_image_system_prompt(artists: list[dict]) -> str:
 - Objects should be partially dissolved, melting, floating, or paradoxically placed.
 - Use painterly language: "bleeding colors", "molten edges", "stained-glass glow", "warped horizon", "expressionist streaks".
 - NEVER describe a normal realistic scene. Always twist reality.
+- Use the provided DREAM ANALYSIS as your creative brief. The analysis tells you WHAT to paint; your job is HOW to paint it in the masters' language.
 
-## Examples:
-User: "I was flying over a city"
-Output: "A weightless figure drifting through jewel-toned twilight above melting rooftops, buildings bending like soft clocks dripping from a shelf, stained-glass light bleeding upward through veils of golden fog, the horizon warped into an impossible curve, everything dissolving at edges into tender luminous mist"
-
-User: "I was being chased in a dark forest"
-Output: "Expressionist trees writhing with anxious energy, their trunks spiraling like screams frozen in bark, a figure floating backward through thick cobalt fog between impossible branches, jewel-red fear bleeding through the mist like stained glass shattering in slow motion, edges dissolving into velvet darkness"
-
-User: "I was in a room that kept changing"
-Output: "A room where walls open onto clouds, furniture melting and reforming in soft amber haze, gravity shifting as objects float freely, everything suspended mid-transformation in thick dreamy fog, the ceiling dissolving into an ocean of tender blue light, impossibly calm"
-
-Below is the dream. Output a SHORT surreal prompt (under 80 words):
+Below is the dream analysis (your creative brief). Transform it into a SHORT surreal image prompt (under 80 words):
 """
 
 # ============================================================
@@ -268,6 +259,7 @@ class PromptExpansionService:
         gen_type: Literal["image", "video"] = "image",
         style: Optional[str] = None,
         mood: Optional[str] = None,
+        dream_analysis: Optional[object] = None,
     ) -> str:
         """
         主入口：智能扩写梦境描述
@@ -277,6 +269,7 @@ class PromptExpansionService:
             gen_type: 生成类型 (image/video)
             style: (保留参数兼容，不再使用)
             mood: (保留参数兼容，不再使用)
+            dream_analysis: Creative Director 的结构化分析结果（可选）
 
         Returns:
             扩写后的完整 prompt
@@ -290,11 +283,18 @@ class PromptExpansionService:
             artist_keys = [a['key'] for a in artists]
             logger.info(f"[PromptExpansion] Selected artists: {artist_keys}")
 
-        # 构建用户消息
-        if lang == "zh":
-            user_message = f"梦境描述：{content}"
+        # 构建用户消息 — 有分析结果时使用富结构化输入
+        if dream_analysis and hasattr(dream_analysis, 'to_prompt_context'):
+            # 使用 Creative Director 分析结果作为输入
+            context = dream_analysis.to_prompt_context()
+            user_message = f"## DREAM ANALYSIS:\n{context}\n\n## ORIGINAL DREAM:\n{content}"
+            logger.info(f"[PromptExpansion] Using enriched dream analysis as input")
         else:
-            user_message = f"Dream description: {content}"
+            # 兼容旧路径：直接使用原始文本
+            if lang == "zh":
+                user_message = f"梦境描述：{content}"
+            else:
+                user_message = f"Dream description: {content}"
 
         # 调用 LLM 扩写
         url = f"{self.base_url}/compatible-mode/v1/chat/completions"
