@@ -9,7 +9,7 @@ export default function ContentReviewPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
+  const [typeFilter] = useState<string | undefined>(undefined);
 
   const fetchData = (p: number, status?: string, type?: string) => {
     setLoading(true);
