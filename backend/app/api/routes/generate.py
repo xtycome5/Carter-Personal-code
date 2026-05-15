@@ -152,14 +152,7 @@ async def generate_image(
             )
             gen_mode = "t2i"
 
-            # 同步模式：图片已生成，直接持久化到 OSS
-            permanent_url = await oss_storage_service.persist(
-                temp_url=image_url,
-                user_id=user_id,
-                generation_id=None,  # 还没有 generation ID，先持久化
-                media_type="image",
-            )
-
+            # 先创建 Generation 记录拿到 ID（用于 OSS 路径）
             generation = Generation(
                 dream_id=dream.id,
                 user_id=UUID(user_id),
@@ -168,7 +161,7 @@ async def generate_image(
                 prompt=expanded_prompt,
                 negative_prompt=data.negative_prompt,
                 status="completed",
-                result_url=permanent_url or image_url,
+                result_url=image_url,  # 临时先存 DashScope URL
                 metadata_json={
                     "size": data.size,
                     "count": data.count,
@@ -176,9 +169,21 @@ async def generate_image(
                     "original_content": dream.content,
                 },
             )
+            db.add(generation)
+            await db.flush()  # flush 获取 generation.id
+
+            # 用真实 generation_id 持久化到 OSS
+            permanent_url = await oss_storage_service.persist(
+                temp_url=image_url,
+                user_id=user_id,
+                generation_id=str(generation.id),
+                media_type="image",
+            )
+            if permanent_url:
+                generation.result_url = permanent_url
 
         # ===== Step 4: 保存生成记录 =====
-        db.add(generation)
+        db.add(generation)  # idempotent for already-tracked objects
         await db.commit()
         await db.refresh(generation)
 
