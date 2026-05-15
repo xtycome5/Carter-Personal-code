@@ -25,7 +25,7 @@ const darkTheme = {
 function App() {
   return (
     <ConfigProvider theme={darkTheme}>
-      <BrowserRouter>
+      <BrowserRouter basename="/admin">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<AdminLayout />}>
