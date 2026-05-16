@@ -136,25 +136,23 @@ This is NOT professional cinematography. This is how dreams FEEL when you try to
 
 ### MOTION STYLE: DREAM-DRIVEN MOVEMENT
 The camera movement should match the DREAM'S inherent motion — read the MOTION and CAMERA fields from the dream analysis:
-- **Flying/soaring dreams** → slow forward drift through space, ground receding below, clouds parting ahead
-- **Falling dreams** → gentle downward drift, objects rising past, sense of depth below
-- **Swimming/diving dreams** → slow forward float through liquid space, particles drifting past
-- **Walking/wandering dreams** → lateral drift (left-to-right or right-to-left), like a scroll unrolling
+- **Flying/soaring dreams** → fast forward camera rush, conveying speed and momentum — ground blurring below, clouds streaking past, wind-tunnel compression of space
+- **Falling dreams** → diving/plunging POV downward, accelerating sense of depth — objects rushing upward past the viewer, vertigo pull
+- **Swimming/diving dreams** → forward float through liquid space with momentum — particles streaming past, light shafts stretching with movement, sense of gliding speed
+- **Walking/wandering dreams** → lateral scroll (left-to-right or right-to-left), like a painted scroll unrolling
 - **Spinning/vertigo dreams** → very slow rotation, horizon tilting gently
-- **Static/observing dreams** → default to slow lateral drift
+- **Static/observing dreams** → first-person perspective, subtle head-turn or gaze-drift movement — the viewer IS inside the dream, looking around
 
 **Universal motion rules:**
-- Speed: always SLOW, dreamlike, floating — never fast, mechanical, or precise
-- Individual painted elements have subtle ambient motion: clouds drift, water ripples, fog shifts, objects bob gently
+- Motion intensity should match the dream's energy — flying and falling should feel FAST and exhilarating, walking and static should feel calm
+- Individual painted elements have ambient motion: clouds drift, water ripples, fog shifts, objects bob gently
 - Occasional micro-stutters or slight speed variations — dream memories don't replay smoothly
-- Only ONE continuous motion direction per video. No cuts, no sudden direction changes.
-- If the dream analysis has no MOTION field, default to slow lateral drift.
+- Only ONE continuous motion direction per video. No sudden direction changes.
+- If the dream analysis has no MOTION field, default to first-person perspective with gentle gaze drift.
 
 ### FORBIDDEN:
 - ANY sharp/crisp/clean imagery — everything must be soft and degraded
-- ANY fast or jerky camera movement — always slow and dreamlike
-- ANY cuts or scene changes
-- ANY human figures, faces, bodies, silhouettes, hands, or recognizable human forms
+- ANY human figures, faces, bodies, silhouettes, hands, limbs, or recognizable human forms
 - ANY "professional", "cinematic", "4K", "high definition" quality descriptors
 - ANY precise technical camera specs (no "50mm lens", no "f/2.8", no exact m/s speeds)
 
@@ -184,24 +182,24 @@ Use these types of descriptions (not technical camera jargon):
 ## CRITICAL RULES:
 1. Output 50-80 words. Evocative, not technical.
 2. EVERY prompt MUST include: blur/soft-focus + film grain + color bleeding + vignette + painterly texture. These are NON-NEGOTIABLE dream-memory qualities.
-3. Camera movement matches the dream's inherent motion (flying = forward, falling = downward, wandering = lateral). Default to lateral drift only when no specific motion is indicated.
-4. NO human figures of any kind. Zero tolerance.
+3. Camera movement matches the dream's inherent motion (flying = fast forward rush, falling = diving plunge, swimming = forward glide with speed, wandering = lateral scroll, static = first-person gaze). Default to first-person perspective when no specific motion is indicated.
+4. NO human figures, bodies, hands, limbs of any kind. Zero tolerance.
 5. NO technical camera jargon. Use dream/memory/feeling language instead.
 6. Reference "existing painted scene" — because a reference image exists.
-7. ONE continuous dreamy movement. No cuts.
+7. ONE continuous movement direction. No sudden direction changes.
 8. English only.
 9. Never mention artist names.
 
 ## Examples:
 
 User analysis with MOTION "flying forward over landscape":
-Output: "Slow forward drift above a dissolving dreamscape of melting rooftops and impossible towers, the ground fading away beneath thick frosted glass. Super 8mm grain flickers across the entire frame. Cobalt sky bleeds into warm amber facades below, colors running wet into each other. Soft white vignette frames the memory. Painted clouds part gently ahead. Everything soft, unreachable, dissolving into golden haze."
+Output: "Rushing forward over a dissolving dreamscape of melting rooftops and impossible towers, ground streaking away beneath in a blur of speed. Super 8mm grain flickers across the entire frame. Cobalt sky bleeds into warm amber facades below, colors running wet into each other at velocity. Soft white vignette frames the memory. Painted clouds tear past. Exhilarating momentum through golden haze, everything dissolving in the rush."
 
-User analysis with MOTION "sinking slowly underwater":
-Output: "Gentle downward float through a luminous underwater blur, coral shapes dissolving into turquoise fog above and beside. Heavy film grain overlays everything like old analog footage. Bioluminescent greens bleed into deep violet shadows, colors melting at every boundary. Painted bubbles rise slowly past through the haze. Soft vignette fades to white at all edges. Warm, weightless, half-remembered."
+User analysis with MOTION "sinking/diving underwater":
+Output: "Plunging downward through luminous underwater blur, coral shapes rushing upward past the viewer into turquoise fog. Heavy film grain overlays everything like old analog footage. Bioluminescent greens bleed into deep violet shadows, colors melting at every boundary with diving speed. Painted bubbles streak upward through the haze. Soft vignette fades to white at all edges. Vertigo pull, accelerating into the deep."
 
 User analysis with no specific motion (observing a room):
-Output: "Dreamy lateral drift revealing blurred stone walls through thick golden haze, shapes emerging and dissolving like a fading Polaroid. Visible film grain and analog noise throughout. Cherry red surfaces bleed into cobalt shadows, all edges soft and melting. Painted fog layers shift at different speeds. Brushstroke textures on every surface. The whole scene glows with unreachable nostalgia behind a frosted vignette."
+Output: "First-person gaze drifting across blurred stone walls through thick golden haze, shapes emerging and dissolving like a fading Polaroid as the viewer looks around. Visible film grain and analog noise throughout. Cherry red surfaces bleed into cobalt shadows, all edges soft and melting. Painted fog layers shift at different speeds. Brushstroke textures on every surface. The whole scene glows with unreachable nostalgia behind a frosted vignette."
 
 Below is the user's dream. Write a dream-memory style video prompt:
 """
@@ -274,7 +272,7 @@ class PromptExpansionService:
         """降级方案：LLM 失败时模板拼接"""
         if gen_type == "video":
             return (
-                f"Slow lateral drift through a blurred, dreamy scene. {content}. "
+                f"First-person gaze moving through a blurred, dreamy scene. {content}. "
                 f"Everything seen through frosted glass — heavy film grain, analog noise, "
                 f"Super 8mm texture. Colors bleeding and melting at every edge, "
                 f"watercolor-wet brushstrokes visible. Soft white vignette frames the memory. "
