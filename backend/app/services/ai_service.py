@@ -283,11 +283,27 @@ class DashScopeService:
         negative_prompt: Optional[str] = None,
         size: str = "1024*1024",
         n: int = 1,
+        style_only: bool = True,
     ) -> str:
-        """参考生图 (V2I) - 以参考图为基础，返回 task_id"""
+        """参考生图 (V2I) - 以参考图为基础，返回 task_id
+        
+        Args:
+            style_only: 如果为 True，在 prompt 前加入风格引导语，
+                        告诉模型仅参考图片的艺术手法/色彩/笔触，不复制具体元素
+        """
         url = f"{self.base_url}/api/v1/services/aigc/image-generation/generation"
 
-        content = [{"image": reference_image_url}, {"text": prompt}]
+        # 风格引导：让模型只学习参考图的艺术表现手法，不复制内容元素
+        style_prefix = (
+            "Use the reference image ONLY as a style guide — learn its artistic technique, "
+            "color palette, brushwork texture, and visual language. "
+            "Do NOT copy any specific objects, shapes, patterns, or compositional elements from it. "
+            "Generate a completely new scene based on the text description below, "
+            "rendered in the artistic style of the reference.\n\n"
+        ) if style_only else ""
+        
+        final_prompt = f"{style_prefix}{prompt}"
+        content = [{"image": reference_image_url}, {"text": final_prompt}]
         payload = {
             "model": settings.IMAGE_PRO_MODEL,
             "input": {"messages": [{"role": "user", "content": content}]},
@@ -297,7 +313,7 @@ class DashScopeService:
             payload["parameters"]["negative_prompt"] = negative_prompt
 
         headers = {**self.headers, "X-DashScope-Async": "enable"}
-        logger.info(f"[V2I] POST {url} | model={payload['model']} | ref_img={reference_image_url[:60]}... | prompt={prompt[:60]}...")
+        logger.info(f"[V2I] POST {url} | model={payload['model']} | style_only={style_only} | ref_img={reference_image_url[:60]}... | prompt={prompt[:60]}...")
 
         timer = ApiCallTimer()
         timer.start()

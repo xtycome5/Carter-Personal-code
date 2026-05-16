@@ -125,12 +125,14 @@ async def generate_image(
         # ===== Step 3: 提交图片生成任务 =====
         if use_video_reference:
             # 有视频 → 用视频 URL 作为参考生图 (wan2.7-image-pro, 异步)
+            # style_only=False: 视频参考是内容参考，需要保留元素
             task_id = await dashscope_service.generate_image_from_reference(
                 prompt=expanded_prompt,
                 reference_image_url=existing_video.result_url,
                 negative_prompt=data.negative_prompt or _get_default_negative_prompt(),
                 size=data.size,
                 n=data.count,
+                style_only=False,
             )
             gen_mode = "v2i"
 
