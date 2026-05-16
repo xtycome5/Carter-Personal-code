@@ -142,6 +142,51 @@ class OSSStorageService:
             logger.error(f"[OSS] Persist failed: {e}")
             return None
 
+    async def persist_file(
+        self,
+        local_path: str,
+        user_id: str,
+        generation_id: str,
+        media_type: str,  # "image" or "video"
+    ) -> Optional[str]:
+        """
+        Upload a local file to OSS.
+        Returns permanent OSS URL, or None if failed/not configured.
+        Used for DreamFilter post-processed videos.
+        """
+        if not self.enabled:
+            logger.warning("[OSS] Not configured, skipping persist_file")
+            return None
+
+        if not os.path.exists(local_path):
+            logger.error(f"[OSS] Local file not found: {local_path}")
+            return None
+
+        try:
+            # Determine extension from filename
+            ext = os.path.splitext(local_path)[1].lstrip(".") or ("png" if media_type == "image" else "mp4")
+
+            # Build key and upload
+            key = self._build_key(user_id, generation_id, media_type, ext)
+            file_size = os.path.getsize(local_path)
+            logger.info(f"[OSS] Uploading local file ({file_size / 1024 / 1024:.1f}MB) to: {key}")
+
+            # Set content-type
+            content_type = f"image/{ext}" if media_type == "image" else "video/mp4"
+            headers = {"Content-Type": content_type}
+
+            with open(local_path, "rb") as f:
+                self.bucket.put_object(key, f, headers=headers)
+
+            # Return permanent URL
+            permanent_url = self._get_public_url(key)
+            logger.info(f"[OSS] Persisted local file: {permanent_url[:80]}")
+            return permanent_url
+
+        except Exception as e:
+            logger.error(f"[OSS] persist_file failed: {e}")
+            return None
+
 
 # Singleton
 oss_storage_service = OSSStorageService()

@@ -88,6 +88,13 @@ def _build_image_system_prompt(artists: list[dict]) -> str:
 - NEVER mention artist names directly in the output. Use their visual language without attribution.
 - Use the provided DREAM ANALYSIS as your creative brief. The analysis tells you WHAT to paint; your job is HOW to paint it in the masters' language.
 
+## MOTION & PERSPECTIVE (critical for dynamic dreams):
+If the dream analysis includes MOTION or CAMERA fields (flying, falling, diving, spinning, etc.), the static image MUST convey that kinetic energy through:
+- **Perspective/viewpoint** — flying = aerial bird's-eye looking down through clouds; falling = vertiginous depth below; diving = submerged looking into depths; rushing = vanishing point with speed lines
+- **Implied movement** — motion blur on elements, windswept forms, trailing particles, directional streaks of color, objects caught mid-flight
+- **Compositional dynamics** — diagonal composition for speed, radial for vertigo, depth layering for forward motion, tilted horizon for disorientation
+- The image should make the viewer FEEL the motion even though it's a still frame. A dream about flying should NOT look like a calm landscape — it should feel like hurtling through space.
+
 Below is the dream analysis (your creative brief). Transform it into a SHORT surreal image prompt (under 80 words):
 """
 
@@ -110,17 +117,25 @@ This is NOT professional cinematography. This is how dreams FEEL when you try to
 - **Soft rounded vignette** — edges of frame fade to white or soft glow, creating a "peephole into another world" effect. The dream is seen through a narrow window.
 - **Low-resolution painterly texture** — thick visible brushstrokes, impressionistic rendering, hand-painted quality. Never photorealistic, never digitally clean.
 
-### MOTION STYLE: SLOW LATERAL DRIFT
-- The ONLY allowed camera motion is a **slow, meditative horizontal drift** (left-to-right or right-to-left), like a scroll being slowly unrolled or a memory replaying in slow motion.
-- Speed: extremely slow, dreamlike, floating — NOT mechanical or precise.
-- Individual painted elements have subtle ambient motion: clouds drift, water ripples, fog shifts, objects bob gently.
-- Occasional micro-stutters or slight speed variations — dream memories don't replay smoothly.
+### MOTION STYLE: DREAM-DRIVEN MOVEMENT
+The camera movement should match the DREAM'S inherent motion — read the MOTION and CAMERA fields from the dream analysis:
+- **Flying/soaring dreams** → slow forward drift through space, ground receding below, clouds parting ahead
+- **Falling dreams** → gentle downward drift, objects rising past, sense of depth below
+- **Swimming/diving dreams** → slow forward float through liquid space, particles drifting past
+- **Walking/wandering dreams** → lateral drift (left-to-right or right-to-left), like a scroll unrolling
+- **Spinning/vertigo dreams** → very slow rotation, horizon tilting gently
+- **Static/observing dreams** → default to slow lateral drift
+
+**Universal motion rules:**
+- Speed: always SLOW, dreamlike, floating — never fast, mechanical, or precise
+- Individual painted elements have subtle ambient motion: clouds drift, water ripples, fog shifts, objects bob gently
+- Occasional micro-stutters or slight speed variations — dream memories don't replay smoothly
+- Only ONE continuous motion direction per video. No cuts, no sudden direction changes.
+- If the dream analysis has no MOTION field, default to slow lateral drift.
 
 ### FORBIDDEN:
 - ANY sharp/crisp/clean imagery — everything must be soft and degraded
-- ANY vertical camera movement (no tilt up/down)
-- ANY forward/backward movement (no dolly, no zoom)
-- ANY rotation, orbit, or complex camera work
+- ANY fast or jerky camera movement — always slow and dreamlike
 - ANY cuts or scene changes
 - ANY human figures, faces, bodies, silhouettes, hands, or recognizable human forms
 - ANY "professional", "cinematic", "4K", "high definition" quality descriptors
@@ -147,29 +162,29 @@ Use these types of descriptions (not technical camera jargon):
 - The prompt should make the reader FEEL slightly intoxicated, nostalgic, half-awake
 
 ## OUTPUT FORMAT:
-[Drift direction] → [What dreamlike shapes drift past, blurred and grainy] → [Subtle ambient motion of painted elements] → [Color bleeding and grain description] → [Atmosphere/emotion]
+[Movement direction matching dream's motion] → [What dreamlike shapes drift past, blurred and grainy] → [Subtle ambient motion of painted elements] → [Color bleeding and grain description] → [Atmosphere/emotion]
 
 ## CRITICAL RULES:
 1. Output 50-80 words. Evocative, not technical.
 2. EVERY prompt MUST include: blur/soft-focus + film grain + color bleeding + vignette + painterly texture. These are NON-NEGOTIABLE dream-memory qualities.
-3. ONLY slow lateral drift. No other camera movement. Ever.
+3. Camera movement matches the dream's inherent motion (flying = forward, falling = downward, wandering = lateral). Default to lateral drift only when no specific motion is indicated.
 4. NO human figures of any kind. Zero tolerance.
 5. NO technical camera jargon. Use dream/memory/feeling language instead.
 6. Reference "existing painted scene" — because a reference image exists.
-7. ONE continuous dreamy drift. No cuts.
+7. ONE continuous dreamy movement. No cuts.
 8. English only.
 9. Never mention artist names.
 
 ## Examples:
 
-User: "I was flying over a city"
-Output: "Slow rightward drift through a blurred dreamscape of melting rooftops and impossible towers, everything seen through heavy frosted glass. Super 8mm grain flickers across the entire frame. Cobalt blue sky bleeds into warm amber facades, colors running wet into each other. Soft white vignette frames the memory. Painted clouds drift gently overhead. Brushstroke textures shimmer through the haze. A fading, golden, unreachable feeling."
+User analysis with MOTION "flying forward over landscape":
+Output: "Slow forward drift above a dissolving dreamscape of melting rooftops and impossible towers, the ground fading away beneath thick frosted glass. Super 8mm grain flickers across the entire frame. Cobalt sky bleeds into warm amber facades below, colors running wet into each other. Soft white vignette frames the memory. Painted clouds part gently ahead. Everything soft, unreachable, dissolving into golden haze."
 
-User: "我在水下呼吸"
-Output: "Gentle leftward float through a luminous underwater blur, coral shapes dissolving into turquoise fog. Heavy film grain overlays everything like old analog footage. Bioluminescent greens bleed into deep violet shadows, colors melting at every boundary. Painted bubbles bob slowly through the haze. Soft vignette fades to white at all edges. Watercolor textures ripple beneath the grain. Warm, weightless, half-remembered."
+User analysis with MOTION "sinking slowly underwater":
+Output: "Gentle downward float through a luminous underwater blur, coral shapes dissolving into turquoise fog above and beside. Heavy film grain overlays everything like old analog footage. Bioluminescent greens bleed into deep violet shadows, colors melting at every boundary. Painted bubbles rise slowly past through the haze. Soft vignette fades to white at all edges. Warm, weightless, half-remembered."
 
-User: "I was in a castle on a mountain"
-Output: "Dreamy lateral drift revealing blurred stone towers through thick golden haze, shapes emerging and dissolving like a fading Polaroid. Visible film grain and analog noise throughout. Cherry red rooftops bleed into cobalt mountain silhouettes, all edges soft and melting. Painted fog layers shift at different speeds. Brushstroke textures on every surface. The whole scene glows with unreachable nostalgia behind a frosted vignette."
+User analysis with no specific motion (observing a room):
+Output: "Dreamy lateral drift revealing blurred stone walls through thick golden haze, shapes emerging and dissolving like a fading Polaroid. Visible film grain and analog noise throughout. Cherry red surfaces bleed into cobalt shadows, all edges soft and melting. Painted fog layers shift at different speeds. Brushstroke textures on every surface. The whole scene glows with unreachable nostalgia behind a frosted vignette."
 
 Below is the user's dream. Write a dream-memory style video prompt:
 """

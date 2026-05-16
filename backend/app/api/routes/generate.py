@@ -6,10 +6,15 @@ Generate Routes - AI 生成（提示词扩写 + 图片 + 视频）
   
 提示词扩写在每次生成前自动执行，无需前端额外调用 enhance 接口。
 enhance 接口仍保留，用于用户手动预览扩写效果。
+
+视频后处理：
+  视频生成完成 → DreamFilter (ffmpeg) → 柔焦/颗粒/泛光/暗角/8fps → 上传 OSS
 """
 from uuid import UUID
 import os
+import logging
 import random
+import tempfile
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -22,6 +27,9 @@ from app.schemas.schemas import (
 from app.core.security import get_current_user
 from app.services.ai_service import dashscope_service
 from app.services.storage_service import oss_storage_service
+from app.services.dream_filter import apply_dream_filter_to_url
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/generate", tags=["generate"])
 
@@ -344,14 +352,48 @@ async def check_generation_status(
             generation.status = "completed"
             temp_url = task_result.get("result_url", "")
             
-            # Persist to OSS (download temp URL → upload to permanent storage)
-            permanent_url = await oss_storage_service.persist(
-                temp_url=temp_url,
-                user_id=user_id,
-                generation_id=str(generation.id),
-                media_type=generation.type,
-            )
-            generation.result_url = permanent_url or temp_url
+            # === Video post-processing: DreamFilter ===
+            if generation.type == "video" and temp_url:
+                try:
+                    # Apply dream filter (ffmpeg: blur + grain + bloom + vignette + 8fps)
+                    filtered_path = os.path.join(
+                        tempfile.gettempdir(),
+                        f"dream_{generation.id}_filtered.mp4"
+                    )
+                    await apply_dream_filter_to_url(temp_url, filtered_path)
+                    
+                    # Upload filtered video to OSS
+                    permanent_url = await oss_storage_service.persist_file(
+                        local_path=filtered_path,
+                        user_id=user_id,
+                        generation_id=str(generation.id),
+                        media_type="video",
+                    )
+                    generation.result_url = permanent_url
+                    logger.info(f"[DreamFilter] Video filtered and persisted: {permanent_url}")
+                    
+                    # Cleanup temp file
+                    if os.path.exists(filtered_path):
+                        os.remove(filtered_path)
+                except Exception as filter_err:
+                    # Filter failed — fall back to raw video
+                    logger.error(f"[DreamFilter] Failed, using raw video: {filter_err}")
+                    permanent_url = await oss_storage_service.persist(
+                        temp_url=temp_url,
+                        user_id=user_id,
+                        generation_id=str(generation.id),
+                        media_type=generation.type,
+                    )
+                    generation.result_url = permanent_url or temp_url
+            else:
+                # Image or no URL — persist directly
+                permanent_url = await oss_storage_service.persist(
+                    temp_url=temp_url,
+                    user_id=user_id,
+                    generation_id=str(generation.id),
+                    media_type=generation.type,
+                )
+                generation.result_url = permanent_url or temp_url
         elif dash_status == "FAILED":
             generation.status = "failed"
         # PENDING / RUNNING 保持 processing
