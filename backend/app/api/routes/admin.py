@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, case, desc
 from app.db.session import get_db
-from app.models.models import User, Dream, Generation, ApiCallLog
+from app.models.models import User, Dream, Generation, ApiCallLog, Artist
 from app.core.security import get_current_user
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -207,10 +207,108 @@ async def recent_generations(
 
 # ===== Artist Pool =====
 @router.get("/artists")
-async def list_artists():
-    """获取当前画家池配置"""
-    from app.services.prompt_expansion import ARTIST_POOL
-    return {"artists": ARTIST_POOL, "total": len(ARTIST_POOL)}
+async def list_artists(
+    active_only: bool = Query(True),
+    db: AsyncSession = Depends(get_db),
+):
+    """获取画家池列表（含参考图 URL）"""
+    query = select(Artist).order_by(Artist.category, Artist.sort_order, Artist.name)
+    if active_only:
+        query = query.where(Artist.active == True)
+    result = await db.execute(query)
+    artists = result.scalars().all()
+
+    items = []
+    for a in artists:
+        items.append({
+            "id": str(a.id),
+            "key": a.key,
+            "name": a.name,
+            "style": a.style,
+            "masterwork_url": a.masterwork_url,
+            "painting": a.painting,
+            "category": a.category,
+            "active": a.active,
+            "sort_order": a.sort_order,
+            "created_at": a.created_at.isoformat() if a.created_at else None,
+        })
+
+    return {"artists": items, "total": len(items)}
+
+
+@router.post("/artists")
+async def create_artist(
+    data: dict,
+    admin_id: str = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """新增画家"""
+    # 检查 key 唯一性
+    existing = await db.scalar(select(Artist).where(Artist.key == data.get("key", "").upper()))
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Artist key '{data['key']}' already exists")
+
+    artist = Artist(
+        key=data["key"].upper(),
+        name=data["name"],
+        style=data["style"],
+        masterwork_url=data.get("masterwork_url"),
+        painting=data.get("painting"),
+        category=data.get("category"),
+        active=data.get("active", True),
+        sort_order=data.get("sort_order", 0),
+    )
+    db.add(artist)
+    await db.commit()
+    await db.refresh(artist)
+    return {"id": str(artist.id), "key": artist.key, "name": artist.name}
+
+
+@router.put("/artists/{artist_id}")
+async def update_artist(
+    artist_id: str,
+    data: dict,
+    admin_id: str = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """更新画家信息"""
+    result = await db.execute(select(Artist).where(Artist.id == UUID(artist_id)))
+    artist = result.scalar_one_or_none()
+    if not artist:
+        raise HTTPException(status_code=404, detail="Artist not found")
+
+    # 更新允许的字段
+    for field in ["name", "style", "masterwork_url", "painting", "category", "active", "sort_order"]:
+        if field in data:
+            setattr(artist, field, data[field])
+
+    # key 需要检查唯一性
+    if "key" in data and data["key"].upper() != artist.key:
+        existing = await db.scalar(select(Artist).where(Artist.key == data["key"].upper()))
+        if existing:
+            raise HTTPException(status_code=400, detail=f"Key '{data['key']}' already in use")
+        artist.key = data["key"].upper()
+
+    await db.commit()
+    await db.refresh(artist)
+    return {"id": str(artist.id), "key": artist.key, "name": artist.name, "active": artist.active}
+
+
+@router.delete("/artists/{artist_id}")
+async def delete_artist(
+    artist_id: str,
+    admin_id: str = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """删除画家（软删除 — 标记为 inactive）"""
+    result = await db.execute(select(Artist).where(Artist.id == UUID(artist_id)))
+    artist = result.scalar_one_or_none()
+    if not artist:
+        raise HTTPException(status_code=404, detail="Artist not found")
+
+    artist.active = False
+    await db.commit()
+    return {"message": f"Artist '{artist.name}' deactivated", "id": str(artist.id)}
 
 
 # ===== API Call Monitoring =====

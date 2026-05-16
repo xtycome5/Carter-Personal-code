@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Table, Tag, Image, Tabs, Spin } from 'antd';
+import { Card, Table, Tag, Image, Tabs, Spin, Tooltip } from 'antd';
 import { PictureOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import { adminAPI } from '../lib/api';
 
@@ -52,26 +52,77 @@ export default function ContentReviewPage() {
       title: 'Type',
       dataIndex: 'type',
       key: 'type',
+      width: 90,
       render: (v: string) => (
         <Tag color={v === 'image' ? 'purple' : 'blue'}>
           {v === 'image' ? <PictureOutlined /> : <VideoCameraOutlined />} {v}
         </Tag>
       ),
     },
-    { title: 'User', dataIndex: 'user', key: 'user' },
+    {
+      title: 'Mode',
+      key: 'mode',
+      width: 90,
+      render: (_: any, record: any) => {
+        const mode = record.metadata?.mode;
+        if (!mode) return <span style={{ color: '#6b7280' }}>—</span>;
+        const modeColors: Record<string, string> = {
+          artist_ref: 'geekblue',
+          t2i: 'cyan',
+          v2i: 'magenta',
+          r2v: 'volcano',
+        };
+        return <Tag color={modeColors[mode] || 'default'}>{mode}</Tag>;
+      },
+    },
+    {
+      title: 'Artist Ref',
+      key: 'artist_ref',
+      width: 70,
+      render: (_: any, record: any) => {
+        const refUrl = record.metadata?.artist_reference;
+        if (!refUrl) return <span style={{ color: '#6b7280' }}>—</span>;
+        return (
+          <Tooltip title={refUrl.split('/artists/')[1] || refUrl}>
+            <Image
+              src={refUrl}
+              width={40}
+              height={40}
+              style={{ objectFit: 'cover', borderRadius: 4 }}
+              fallback="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMmEyYTNlIi8+PC9zdmc+"
+            />
+          </Tooltip>
+        );
+      },
+    },
+    { title: 'User', dataIndex: 'user', key: 'user', width: 100 },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      width: 100,
       render: (v: string) => {
         const colors: Record<string, string> = { completed: 'green', failed: 'red', processing: 'orange', pending: 'default' };
         return <Tag color={colors[v] || 'default'}>{v}</Tag>;
       },
     },
     {
+      title: 'Prompt',
+      dataIndex: 'prompt',
+      key: 'prompt',
+      ellipsis: true,
+      width: 200,
+      render: (v: string) => (
+        <Tooltip title={v}>
+          <span style={{ fontSize: 11, color: '#9ca3af' }}>{v}</span>
+        </Tooltip>
+      ),
+    },
+    {
       title: 'Created',
       dataIndex: 'created_at',
       key: 'created_at',
+      width: 150,
       render: (v: string) => v ? new Date(v).toLocaleString() : '-',
     },
   ];
@@ -107,6 +158,7 @@ export default function ContentReviewPage() {
               onChange: (p) => { setPage(p); fetchData(p, statusFilter, typeFilter); },
             }}
             size="small"
+            scroll={{ x: 900 }}
           />
         </Spin>
       </Card>

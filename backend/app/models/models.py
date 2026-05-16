@@ -64,6 +64,23 @@ class Generation(Base):
     user = relationship("User", back_populates="generations")
 
 
+class Artist(Base):
+    """画家池 — 用于 prompt expansion 的美学参考"""
+    __tablename__ = "artists"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    key = Column(String(50), unique=True, nullable=False, index=True)  # 唯一标识: DALI, MAGRITTE...
+    name = Column(String(200), nullable=False)  # 显示名: Salvador Dalí
+    style = Column(Text, nullable=False)  # 风格描述 (用于 system prompt)
+    masterwork_url = Column(String(1000), nullable=True)  # 参考图 OSS URL
+    painting = Column(String(300), nullable=True)  # 代表作名称
+    category = Column(String(100), nullable=True)  # 分类: surrealism_core, expressionism...
+    active = Column(Boolean, default=True, index=True)  # 是否启用
+    sort_order = Column(Integer, default=0)  # 排序（同 category 内）
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
 class ApiCallLog(Base):
     """DashScope API 调用日志 — 用于模型监控面板"""
     __tablename__ = "api_call_logs"

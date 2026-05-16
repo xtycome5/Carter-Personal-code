@@ -1,7 +1,7 @@
 """
 Prompt Expansion Service - 提示词扩写服务
 
-从 18 位梦境/超现实画家池中随机取 3 位作为美学基底，生成超现实梦境提示词。
+从数据库画家池中随机取 3 位（active 状态）作为美学基底，生成超现实梦境提示词。
 每次生图调用都会随机组合，产出风格多变但始终保持超现实梦境质感。
 
 美学原则：超现实（非现实照片）、朦胧（面纱般的雾气边缘）、情绪充盈（光色形服务于感受）
@@ -9,9 +9,9 @@ Prompt Expansion Service - 提示词扩写服务
 视频提示词策略：
 梦境碎片美学 — 刻意的低清、模糊、颗粒感、色彩溢出、晕影边缘。
 模拟人类回忆梦境时的记忆特征：碎片化、不连贯、氛围感远重于逻辑。
-运动方式：匀速横移漂浮（长卷展开感），像记忆在缓慢回放。
+运动方式：由 Creative Director 分析驱动（飞行→向前，坠落→向下，默认横移）。
 
-画家池将来可通过后台管理系统增减配置。
+画家池通过后台管理系统（admin）增减配置，存储在 PostgreSQL artists 表中。
 """
 import logging
 import random
@@ -24,41 +24,58 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# ARTIST POOL - 梦境画家池（未来可通过后台增减）
+# ARTIST POOL - 数据库加载 + 硬编码 fallback
 # ============================================================
 
 OSS_ARTIST_BASE = "https://dream-recorder-media.oss-ap-southeast-5.aliyuncs.com/artists"
 
-ARTIST_POOL = [
-    # 超现实主义核心
+# Fallback pool — 仅当 DB 不可用时使用
+ARTIST_POOL_FALLBACK = [
     {"key": "DALI", "name": "Salvador Dalí", "style": "melting forms, warped time-space, impossibly detailed renderings of impossible things, soft clocks dripping", "masterwork": f"{OSS_ARTIST_BASE}/dali/masterwork.jpg", "painting": "The Persistence of Memory"},
     {"key": "MAGRITTE", "name": "René Magritte", "style": "calm paradoxes in impossible situations, philosophical mystery, uncanny stillness, objects defying logic", "masterwork": f"{OSS_ARTIST_BASE}/magritte/masterwork.jpg", "painting": "The Son of Man"},
     {"key": "ERNST", "name": "Max Ernst", "style": "collage textures, organic alien forms, jungle-like otherworlds, frottage surfaces, biomorphic strangeness", "masterwork": f"{OSS_ARTIST_BASE}/ernst/masterwork.jpg", "painting": "The Elephant Celebes"},
-    {"key": "VARO", "name": "Remedios Varo", "style": "alchemical machinery, spiral architecture, feminine mysticism, mechanical dreamscapes, intricate vessels", "masterwork": f"{OSS_ARTIST_BASE}/varo/masterwork.jpg", "painting": "Creation of the Birds"},
-    {"key": "CARRINGTON", "name": "Leonora Carrington", "style": "magical creatures, Celtic mythology, alchemical dreamscapes, hybrid beings, enchanted interiors", "masterwork": f"{OSS_ARTIST_BASE}/carrington/masterwork.jpg", "painting": "Self-Portrait (Inn of the Dawn Horse)"},
-    # 表现主义/情绪扭曲
-    {"key": "MUNCH", "name": "Edvard Munch", "style": "emotions distorting reality, expressionist anxiety screaming through color, undulating forms, raw psychic energy", "masterwork": f"{OSS_ARTIST_BASE}/munch/masterwork.jpg", "painting": "The Scream"},
-    {"key": "SCHIELE", "name": "Egon Schiele", "style": "twisted bodies, raw emotional linework, exposed vulnerability, angular tension, nervous energy", "masterwork": f"{OSS_ARTIST_BASE}/schiele/masterwork.jpg", "painting": "Self-Portrait with Physalis"},
-    {"key": "BACON", "name": "Francis Bacon", "style": "distorted flesh, caged screaming forms, violent blurring, visceral smeared humanity, existential horror", "masterwork": f"{OSS_ARTIST_BASE}/bacon/masterwork.jpg", "painting": "Study after Velázquez's Portrait of Pope Innocent X"},
-    # 诗意梦幻/失重
     {"key": "CHAGALL", "name": "Marc Chagall", "style": "weightless floating, jewel-tone colors, poetic tenderness bathed in stained-glass light, lovers drifting above villages", "masterwork": f"{OSS_ARTIST_BASE}/chagall/masterwork.jpg", "painting": "I and the Village"},
-    {"key": "REDON", "name": "Odilon Redon", "style": "pastel dreamscapes, floating eyeballs, faces emerging from flowers, luminous color fields, soft numinous forms", "masterwork": f"{OSS_ARTIST_BASE}/redon/masterwork.jpg", "painting": "The Cyclops"},
+    {"key": "MUNCH", "name": "Edvard Munch", "style": "emotions distorting reality, expressionist anxiety screaming through color, undulating forms, raw psychic energy", "masterwork": f"{OSS_ARTIST_BASE}/munch/masterwork.jpg", "painting": "The Scream"},
     {"key": "KLIMT", "name": "Gustav Klimt", "style": "gold-leaf ornamentation, erotic patterning, Byzantine dream surfaces, mosaic-like skin, decorative ecstasy", "masterwork": f"{OSS_ARTIST_BASE}/klimt/masterwork.jpg", "painting": "The Kiss"},
-    {"key": "MUCHA", "name": "Alphonse Mucha", "style": "Art Nouveau flowing lines, floral halos, soft luminous glow, ornamental feminine silhouettes, circular compositions", "masterwork": f"{OSS_ARTIST_BASE}/mucha/masterwork.jpg", "painting": "Job"},
-    # 神秘/象征主义
-    {"key": "BOSCH", "name": "Hieronymus Bosch", "style": "hellish fantasy, densely packed creatures, medieval nightmare imagery, bizarre hybrid beings, teeming surreal detail", "masterwork": f"{OSS_ARTIST_BASE}/bosch/masterwork.jpg", "painting": "The Garden of Earthly Delights"},
-    {"key": "BLAKE", "name": "William Blake", "style": "divine visions, muscular angels, cosmic radiance, prophetic illumination, spiritual enormity", "masterwork": f"{OSS_ARTIST_BASE}/blake/masterwork.jpg", "painting": "The Ancient of Days"},
-    {"key": "BEKSINSKI", "name": "Zdzisław Beksiński", "style": "bone-like architecture, apocalyptic wastelands, organic horror beauty, skeletal cathedrals, amber decay", "masterwork": f"{OSS_ARTIST_BASE}/beksinski/masterwork.jpg", "painting": "Untitled (1984)"},
-    # 现代梦境/数字感
-    {"key": "KUSAMA", "name": "Yayoi Kusama", "style": "infinite polka dots, mirrored infinity rooms, cosmic endless repetition, obsessive patterning, dissolving self into universe", "masterwork": f"{OSS_ARTIST_BASE}/kusama/masterwork.jpg", "painting": "Pumpkin"},
-    {"key": "DE_CHIRICO", "name": "Giorgio de Chirico", "style": "metaphysical empty plazas, long impossible shadows, architectural unease, melancholic stillness, enigmatic mannequins", "masterwork": f"{OSS_ARTIST_BASE}/de_chirico/masterwork.jpg", "painting": "The Disquieting Muses"},
-    {"key": "SAGE", "name": "Kay Sage", "style": "desolate geometric dreamscapes, draped architectural forms, grey-toned silence, angular fabric structures, lonely horizons", "masterwork": f"{OSS_ARTIST_BASE}/sage/masterwork.jpg", "painting": "Tomorrow is Never"},
 ]
 
 
-def _pick_artists(n: int = 3) -> list[dict]:
-    """从画家池随机取 n 位"""
-    return random.sample(ARTIST_POOL, min(n, len(ARTIST_POOL)))
+async def _load_artists_from_db() -> list[dict]:
+    """从数据库加载所有 active 画家"""
+    try:
+        from app.db.session import async_session
+        from app.models.models import Artist
+        from sqlalchemy import select
+
+        async with async_session() as session:
+            result = await session.execute(
+                select(Artist).where(Artist.active == True)
+            )
+            artists = result.scalars().all()
+            if not artists:
+                return []
+            return [
+                {
+                    "key": a.key,
+                    "name": a.name,
+                    "style": a.style,
+                    "masterwork": a.masterwork_url,
+                    "painting": a.painting,
+                }
+                for a in artists
+            ]
+    except Exception as e:
+        logger.warning(f"[PromptExpansion] Failed to load artists from DB: {e}, using fallback")
+        return []
+
+
+async def _pick_artists_async(n: int = 3) -> list[dict]:
+    """从 DB 加载画家池并随机取 n 位，DB 失败时用 fallback"""
+    pool = await _load_artists_from_db()
+    if not pool:
+        pool = ARTIST_POOL_FALLBACK
+        logger.info(f"[PromptExpansion] Using fallback artist pool ({len(pool)} artists)")
+    return random.sample(pool, min(n, len(pool)))
 
 
 def _build_image_system_prompt(artists: list[dict]) -> str:
@@ -236,11 +253,12 @@ class PromptExpansionService:
         return "en"
 
     def _get_system_prompt(self, gen_type: Literal["image", "video"]) -> tuple[str, list[dict]]:
-        """根据生成类型选择 System Prompt，返回 (prompt, selected_artists)"""
+        """根据生成类型选择 System Prompt，返回 (prompt, selected_artists)
+        注意: image 类型的实际 artist 选择在 expand() 中异步完成"""
         if gen_type == "video":
             return DREAM_VIDEO_SYSTEM_PROMPT, []
-        artists = _pick_artists(3)
-        return _build_image_system_prompt(artists), artists
+        # image 模式返回占位符 — expand() 会异步加载并替换
+        return "", []
 
     def _get_model(self, gen_type: Literal["image", "video"]) -> str:
         """根据生成类型选择 LLM 模型"""
@@ -291,8 +309,15 @@ class PromptExpansionService:
             tuple of (扩写后的完整 prompt, 选中画家的参考图 URL 列表)
         """
         lang = self._detect_language(content)
-        system_prompt, artists = self._get_system_prompt(gen_type)
         model = self._get_model(gen_type)
+
+        # 异步加载画家池（仅 image 类型需要）
+        if gen_type == "image":
+            artists = await _pick_artists_async(3)
+            system_prompt = _build_image_system_prompt(artists)
+        else:
+            artists = []
+            system_prompt = DREAM_VIDEO_SYSTEM_PROMPT
 
         # 收集选中画家的参考图 URL
         reference_urls = [a['masterwork'] for a in artists if a.get('masterwork')]
