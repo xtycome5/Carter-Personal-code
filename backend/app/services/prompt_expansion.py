@@ -27,30 +27,32 @@ logger = logging.getLogger(__name__)
 # ARTIST POOL - 梦境画家池（未来可通过后台增减）
 # ============================================================
 
+OSS_ARTIST_BASE = "https://dream-recorder-media.oss-ap-southeast-5.aliyuncs.com/artists"
+
 ARTIST_POOL = [
     # 超现实主义核心
-    {"key": "DALI", "name": "Salvador Dalí", "style": "melting forms, warped time-space, impossibly detailed renderings of impossible things, soft clocks dripping"},
-    {"key": "MAGRITTE", "name": "René Magritte", "style": "calm paradoxes in impossible situations, philosophical mystery, uncanny stillness, objects defying logic"},
-    {"key": "ERNST", "name": "Max Ernst", "style": "collage textures, organic alien forms, jungle-like otherworlds, frottage surfaces, biomorphic strangeness"},
-    {"key": "VARO", "name": "Remedios Varo", "style": "alchemical machinery, spiral architecture, feminine mysticism, mechanical dreamscapes, intricate vessels"},
-    {"key": "CARRINGTON", "name": "Leonora Carrington", "style": "magical creatures, Celtic mythology, alchemical dreamscapes, hybrid beings, enchanted interiors"},
+    {"key": "DALI", "name": "Salvador Dalí", "style": "melting forms, warped time-space, impossibly detailed renderings of impossible things, soft clocks dripping", "masterwork": f"{OSS_ARTIST_BASE}/dali/masterwork.jpg", "painting": "The Persistence of Memory"},
+    {"key": "MAGRITTE", "name": "René Magritte", "style": "calm paradoxes in impossible situations, philosophical mystery, uncanny stillness, objects defying logic", "masterwork": f"{OSS_ARTIST_BASE}/magritte/masterwork.jpg", "painting": "The Son of Man"},
+    {"key": "ERNST", "name": "Max Ernst", "style": "collage textures, organic alien forms, jungle-like otherworlds, frottage surfaces, biomorphic strangeness", "masterwork": f"{OSS_ARTIST_BASE}/ernst/masterwork.jpg", "painting": "The Elephant Celebes"},
+    {"key": "VARO", "name": "Remedios Varo", "style": "alchemical machinery, spiral architecture, feminine mysticism, mechanical dreamscapes, intricate vessels", "masterwork": f"{OSS_ARTIST_BASE}/varo/masterwork.jpg", "painting": "Creation of the Birds"},
+    {"key": "CARRINGTON", "name": "Leonora Carrington", "style": "magical creatures, Celtic mythology, alchemical dreamscapes, hybrid beings, enchanted interiors", "masterwork": f"{OSS_ARTIST_BASE}/carrington/masterwork.jpg", "painting": "Self-Portrait (Inn of the Dawn Horse)"},
     # 表现主义/情绪扭曲
-    {"key": "MUNCH", "name": "Edvard Munch", "style": "emotions distorting reality, expressionist anxiety screaming through color, undulating forms, raw psychic energy"},
-    {"key": "SCHIELE", "name": "Egon Schiele", "style": "twisted bodies, raw emotional linework, exposed vulnerability, angular tension, nervous energy"},
-    {"key": "BACON", "name": "Francis Bacon", "style": "distorted flesh, caged screaming forms, violent blurring, visceral smeared humanity, existential horror"},
+    {"key": "MUNCH", "name": "Edvard Munch", "style": "emotions distorting reality, expressionist anxiety screaming through color, undulating forms, raw psychic energy", "masterwork": f"{OSS_ARTIST_BASE}/munch/masterwork.jpg", "painting": "The Scream"},
+    {"key": "SCHIELE", "name": "Egon Schiele", "style": "twisted bodies, raw emotional linework, exposed vulnerability, angular tension, nervous energy", "masterwork": f"{OSS_ARTIST_BASE}/schiele/masterwork.jpg", "painting": "Self-Portrait with Physalis"},
+    {"key": "BACON", "name": "Francis Bacon", "style": "distorted flesh, caged screaming forms, violent blurring, visceral smeared humanity, existential horror", "masterwork": f"{OSS_ARTIST_BASE}/bacon/masterwork.jpg", "painting": "Study after Velázquez's Portrait of Pope Innocent X"},
     # 诗意梦幻/失重
-    {"key": "CHAGALL", "name": "Marc Chagall", "style": "weightless floating, jewel-tone colors, poetic tenderness bathed in stained-glass light, lovers drifting above villages"},
-    {"key": "REDON", "name": "Odilon Redon", "style": "pastel dreamscapes, floating eyeballs, faces emerging from flowers, luminous color fields, soft numinous forms"},
-    {"key": "KLIMT", "name": "Gustav Klimt", "style": "gold-leaf ornamentation, erotic patterning, Byzantine dream surfaces, mosaic-like skin, decorative ecstasy"},
-    {"key": "MUCHA", "name": "Alphonse Mucha", "style": "Art Nouveau flowing lines, floral halos, soft luminous glow, ornamental feminine silhouettes, circular compositions"},
+    {"key": "CHAGALL", "name": "Marc Chagall", "style": "weightless floating, jewel-tone colors, poetic tenderness bathed in stained-glass light, lovers drifting above villages", "masterwork": f"{OSS_ARTIST_BASE}/chagall/masterwork.jpg", "painting": "I and the Village"},
+    {"key": "REDON", "name": "Odilon Redon", "style": "pastel dreamscapes, floating eyeballs, faces emerging from flowers, luminous color fields, soft numinous forms", "masterwork": f"{OSS_ARTIST_BASE}/redon/masterwork.jpg", "painting": "The Cyclops"},
+    {"key": "KLIMT", "name": "Gustav Klimt", "style": "gold-leaf ornamentation, erotic patterning, Byzantine dream surfaces, mosaic-like skin, decorative ecstasy", "masterwork": f"{OSS_ARTIST_BASE}/klimt/masterwork.jpg", "painting": "The Kiss"},
+    {"key": "MUCHA", "name": "Alphonse Mucha", "style": "Art Nouveau flowing lines, floral halos, soft luminous glow, ornamental feminine silhouettes, circular compositions", "masterwork": f"{OSS_ARTIST_BASE}/mucha/masterwork.jpg", "painting": "Job"},
     # 神秘/象征主义
-    {"key": "BOSCH", "name": "Hieronymus Bosch", "style": "hellish fantasy, densely packed creatures, medieval nightmare imagery, bizarre hybrid beings, teeming surreal detail"},
-    {"key": "BLAKE", "name": "William Blake", "style": "divine visions, muscular angels, cosmic radiance, prophetic illumination, spiritual enormity"},
-    {"key": "BEKSINSKI", "name": "Zdzisław Beksiński", "style": "bone-like architecture, apocalyptic wastelands, organic horror beauty, skeletal cathedrals, amber decay"},
+    {"key": "BOSCH", "name": "Hieronymus Bosch", "style": "hellish fantasy, densely packed creatures, medieval nightmare imagery, bizarre hybrid beings, teeming surreal detail", "masterwork": f"{OSS_ARTIST_BASE}/bosch/masterwork.jpg", "painting": "The Garden of Earthly Delights"},
+    {"key": "BLAKE", "name": "William Blake", "style": "divine visions, muscular angels, cosmic radiance, prophetic illumination, spiritual enormity", "masterwork": f"{OSS_ARTIST_BASE}/blake/masterwork.jpg", "painting": "The Ancient of Days"},
+    {"key": "BEKSINSKI", "name": "Zdzisław Beksiński", "style": "bone-like architecture, apocalyptic wastelands, organic horror beauty, skeletal cathedrals, amber decay", "masterwork": f"{OSS_ARTIST_BASE}/beksinski/masterwork.jpg", "painting": "Untitled (1984)"},
     # 现代梦境/数字感
-    {"key": "KUSAMA", "name": "Yayoi Kusama", "style": "infinite polka dots, mirrored infinity rooms, cosmic endless repetition, obsessive patterning, dissolving self into universe"},
-    {"key": "DE_CHIRICO", "name": "Giorgio de Chirico", "style": "metaphysical empty plazas, long impossible shadows, architectural unease, melancholic stillness, enigmatic mannequins"},
-    {"key": "SAGE", "name": "Kay Sage", "style": "desolate geometric dreamscapes, draped architectural forms, grey-toned silence, angular fabric structures, lonely horizons"},
+    {"key": "KUSAMA", "name": "Yayoi Kusama", "style": "infinite polka dots, mirrored infinity rooms, cosmic endless repetition, obsessive patterning, dissolving self into universe", "masterwork": f"{OSS_ARTIST_BASE}/kusama/masterwork.jpg", "painting": "Pumpkin"},
+    {"key": "DE_CHIRICO", "name": "Giorgio de Chirico", "style": "metaphysical empty plazas, long impossible shadows, architectural unease, melancholic stillness, enigmatic mannequins", "masterwork": f"{OSS_ARTIST_BASE}/de_chirico/masterwork.jpg", "painting": "The Disquieting Muses"},
+    {"key": "SAGE", "name": "Kay Sage", "style": "desolate geometric dreamscapes, draped architectural forms, grey-toned silence, angular fabric structures, lonely horizons", "masterwork": f"{OSS_ARTIST_BASE}/sage/masterwork.jpg", "painting": "Tomorrow is Never"},
 ]
 
 
@@ -259,7 +261,7 @@ class PromptExpansionService:
         style: Optional[str] = None,
         mood: Optional[str] = None,
         dream_analysis: Optional[object] = None,
-    ) -> str:
+    ) -> tuple[str, list[str]]:
         """
         主入口：智能扩写梦境描述
 
@@ -271,16 +273,19 @@ class PromptExpansionService:
             dream_analysis: Creative Director 的结构化分析结果（可选）
 
         Returns:
-            扩写后的完整 prompt
+            tuple of (扩写后的完整 prompt, 选中画家的参考图 URL 列表)
         """
         lang = self._detect_language(content)
         system_prompt, artists = self._get_system_prompt(gen_type)
         model = self._get_model(gen_type)
 
+        # 收集选中画家的参考图 URL
+        reference_urls = [a['masterwork'] for a in artists if a.get('masterwork')]
+
         # 日志记录选中的画家
         if artists:
             artist_keys = [a['key'] for a in artists]
-            logger.info(f"[PromptExpansion] Selected artists: {artist_keys}")
+            logger.info(f"[PromptExpansion] Selected artists: {artist_keys} | reference_images: {len(reference_urls)}")
 
         # 构建用户消息 — 有分析结果时使用富结构化输入
         if dream_analysis and hasattr(dream_analysis, 'to_prompt_context'):
@@ -338,7 +343,7 @@ class PromptExpansionService:
                     tokens_input=tokens_in, tokens_output=tokens_out,
                     response_summary={"prompt_length": len(result)},
                 ))
-                return result
+                return result, reference_urls
 
         except Exception as e:
             timer.stop()
@@ -348,7 +353,7 @@ class PromptExpansionService:
                 status="failed", duration_ms=timer.duration_ms,
                 error=str(e)[:500],
             ))
-            return self._fallback_expand(content, gen_type)
+            return self._fallback_expand(content, gen_type), reference_urls
 
 
 # Singleton

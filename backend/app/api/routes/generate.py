@@ -8,6 +8,8 @@ Generate Routes - AI 生成（提示词扩写 + 图片 + 视频）
 enhance 接口仍保留，用于用户手动预览扩写效果。
 """
 from uuid import UUID
+import os
+import random
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -45,7 +47,7 @@ async def enhance_description(
 
     try:
         # 调用 Prompt Expansion Service
-        enhanced = await dashscope_service.expand_prompt(
+        enhanced, _refs = await dashscope_service.expand_prompt(
             content=dream.content,
             gen_type="image",
             style=data.style,
@@ -90,7 +92,7 @@ async def generate_image(
 
     try:
         # ===== Step 1: Prompt Expansion（核心扩写步骤）=====
-        expanded_prompt = await dashscope_service.expand_prompt(
+        expanded_prompt, artist_references = await dashscope_service.expand_prompt(
             content=dream.content,  # 始终基于原始描述扩写，保证新鲜度
             gen_type="image",
             style=data.style,
@@ -110,10 +112,10 @@ async def generate_image(
             ).order_by(Generation.created_at.desc()).limit(1)
         )
         existing_video = video_result.scalar_one_or_none()
-        use_reference = existing_video and existing_video.result_url
+        use_video_reference = existing_video and existing_video.result_url
 
         # ===== Step 3: 提交图片生成任务 =====
-        if use_reference:
+        if use_video_reference:
             # 有视频 → 用视频 URL 作为参考生图 (wan2.7-image-pro, 异步)
             task_id = await dashscope_service.generate_image_from_reference(
                 prompt=expanded_prompt,
@@ -142,8 +144,39 @@ async def generate_image(
                     "original_content": dream.content,
                 },
             )
+        elif artist_references:
+            # 有画家参考图 → 用画家名作做参考生图 (wan2.7-image-pro, 异步)
+            # 随机选 1 张参考图传给模型（多张可能干扰风格融合）
+            ref_url = random.choice(artist_references)
+            task_id = await dashscope_service.generate_image_from_reference(
+                prompt=expanded_prompt,
+                reference_image_url=ref_url,
+                negative_prompt=data.negative_prompt or _get_default_negative_prompt(),
+                size=data.size,
+                n=data.count,
+            )
+            gen_mode = "artist_ref"
+
+            generation = Generation(
+                dream_id=dream.id,
+                user_id=UUID(user_id),
+                type="image",
+                style=data.style,
+                prompt=expanded_prompt,
+                negative_prompt=data.negative_prompt,
+                status="processing",
+                task_id=task_id,
+                metadata_json={
+                    "size": data.size,
+                    "count": data.count,
+                    "mode": gen_mode,
+                    "artist_reference": ref_url,
+                    "all_artist_references": artist_references,
+                    "original_content": dream.content,
+                },
+            )
         else:
-            # 无视频 → 纯文生图 (wan2.7-image-pro, 异步)
+            # 无参考 → 纯文生图 (wan2.7-image-pro, 异步)
             task_id = await dashscope_service.generate_image(
                 prompt=expanded_prompt,
                 negative_prompt=data.negative_prompt or _get_default_negative_prompt(),
@@ -223,7 +256,7 @@ async def generate_video(
             )
 
         # ===== Step 2: Prompt Expansion（视频专用扩写）=====
-        expanded_prompt = await dashscope_service.expand_prompt(
+        expanded_prompt, _video_refs = await dashscope_service.expand_prompt(
             content=dream.content,
             gen_type="video",
             style=data.style,

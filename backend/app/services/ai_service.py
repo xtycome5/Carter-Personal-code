@@ -31,7 +31,7 @@ class DashScopeService:
         gen_type: str = "image",
         style: Optional[str] = None,
         mood: Optional[str] = None,
-    ) -> str:
+    ) -> tuple[str, list[str]]:
         """
         提示词扩写 - Two-Step Pipeline
         
@@ -45,7 +45,7 @@ class DashScopeService:
             mood: (保留参数兼容，不再使用)
         
         Returns:
-            扩写后的完整 prompt，可直接传入生图/生视频 API
+            tuple of (扩写后的完整 prompt, 选中画家的参考图 URL 列表)
         """
         # === Step 1: Creative Director 分析 ===
         logger.info(f"[Pipeline] Step 1: Creative Director analyzing dream (gen_type={gen_type})")

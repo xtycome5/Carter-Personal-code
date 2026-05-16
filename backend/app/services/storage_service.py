@@ -8,6 +8,7 @@ Bucket 结构:
     videos/{user_id}/{generation_id}.{ext}
 """
 import io
+import os
 import logging
 from typing import Optional
 from urllib.parse import urlparse
