@@ -145,9 +145,14 @@ The camera movement should match the DREAM'S inherent motion — read the MOTION
 
 **Universal motion rules:**
 - Motion intensity should match the dream's energy — flying and falling should feel FAST and exhilarating, walking and static should feel calm
-- **TIME-LAPSE natural phenomena**: whenever the scene contains sky, clouds, light, water, vegetation, or weather, describe them with time-lapse acceleration — clouds racing across the sky, light sweeping from warm to cool, shadows rotating across surfaces, water rising/falling in fast-forward, flowers blooming/wilting in seconds. This compressed-time quality makes the dream feel like hours collapsed into moments.
-- Individual painted elements have ambient motion: clouds race, water surges, fog rolls, objects pulse gently
-- Only ONE continuous motion direction per video. No sudden direction changes.
+- **TIME-LAPSE IS THE PRIMARY MOTION LANGUAGE** (CRITICAL — this is the most important visual quality):
+  - ALL natural phenomena MUST be described with dramatic time-lapse acceleration — this is NON-NEGOTIABLE
+  - Clouds RACE and CHURN across the sky in fast-forward. Light SWEEPS across surfaces shifting color temperature in seconds. Shadows ROTATE visibly. Water SURGES and retreats rapidly. Vegetation PULSES with growth.
+  - Even in static/calm dreams, the background environment should feel like hours compressed into seconds — sky cycling through colors, light arcing across the scene, shadows sweeping like clock hands
+  - Time-lapse creates the core dream sensation: "I was there for hours but it felt like seconds" — this collapsed-time quality is what makes it feel like a DREAM MEMORY, not a real-time recording
+  - Dedicate at least 30% of the prompt words to describing time-lapse motion of environmental elements
+- Individual painted elements have visible accelerated motion: clouds churn, water surges, fog rolls rapidly, light arcs across surfaces
+- Only ONE continuous camera direction per video. No sudden direction changes.
 - If the dream analysis has no MOTION field, default to first-person perspective with gentle gaze drift.
 
 ### FORBIDDEN:
@@ -180,26 +185,27 @@ Use these types of descriptions (not technical camera jargon):
 [Movement direction matching dream's motion] → [What dreamlike shapes drift past, blurred and grainy] → [Time-lapse natural phenomena: accelerated clouds/light/shadows] → [Color bleeding and grain description] → [Atmosphere/emotion of compressed time]
 
 ## CRITICAL RULES:
-1. Output 50-80 words. Evocative, not technical.
+1. Output 60-90 words. Evocative, not technical.
 2. EVERY prompt MUST include: blur/soft-focus + film grain + color bleeding + vignette + painterly texture. These are NON-NEGOTIABLE dream-memory qualities.
-3. Camera movement matches the dream's inherent motion (flying = fast forward rush, falling = diving plunge, swimming = forward glide with speed, wandering = lateral scroll, static = first-person gaze). Default to first-person perspective when no specific motion is indicated.
-4. NO human figures, bodies, hands, limbs of any kind. Zero tolerance.
-5. NO technical camera jargon. Use dream/memory/feeling language instead.
-6. Reference "existing painted scene" — because a reference image exists.
-7. ONE continuous movement direction. No sudden direction changes.
-8. English only.
-9. Never mention artist names.
+3. **EVERY prompt MUST include dramatic TIME-LAPSE motion** — clouds racing/churning, light sweeping across surfaces and shifting color, shadows rotating like clock hands, water surging. At least 30% of the prompt should describe accelerated environmental motion. This is the single most important visual quality that separates dream-memory from a normal video.
+4. Camera movement matches the dream's inherent motion (flying = fast forward rush, falling = diving plunge, swimming = forward glide with speed, wandering = lateral scroll, static = first-person gaze). Default to first-person perspective when no specific motion is indicated.
+5. NO human figures, bodies, hands, limbs of any kind. Zero tolerance.
+6. NO technical camera jargon. Use dream/memory/feeling language instead.
+7. Reference "existing painted scene" — because a reference image exists.
+8. ONE continuous camera direction. No sudden direction changes.
+9. English only.
+10. Never mention artist names.
 
 ## Examples:
 
 User analysis with MOTION "flying forward over landscape":
-Output: "Rushing forward over a dissolving dreamscape of melting rooftops and impossible towers, ground streaking away beneath in a blur of speed. Time-lapse clouds race across a cobalt sky that bleeds into warm amber facades below, light sweeping from gold to violet in seconds. Super 8mm grain flickers across the entire frame. Soft white vignette frames the memory. Painted shadows rotate rapidly across surfaces. Exhilarating momentum through golden haze, hours compressed into a single breath."
+Output: "Rushing forward over dissolving rooftops and impossible towers. The entire sky CHURNS in dramatic time-lapse — clouds racing and morphing overhead, golden light sweeping to violet in seconds, shadows of towers rotating rapidly across cobalt streets below. Ground streaks away in speed-blur. Super 8mm grain flickers throughout. Colors bleed wet at every edge. Soft vignette frames this compressed memory — hours of flight collapsed into one breathless moment."
 
 User analysis with MOTION "sinking/diving underwater":
-Output: "Plunging downward through luminous underwater blur, coral shapes rushing upward past the viewer into turquoise fog. Time-lapse light shafts sweep across the seabed, shifting from warm amber to cool blue in fast-forward. Heavy film grain overlays everything like old analog footage. Bioluminescent greens bleed into deep violet shadows, colors melting at every boundary. Painted bubbles streak upward through the haze. Soft vignette fades to white at all edges. Vertigo pull into the accelerating deep."
+Output: "Plunging downward through luminous aquamarine blur. Time-lapse light shafts arc across the seabed in fast-forward — sweeping from warm amber to cold blue and back, shadows of coral rotating visibly on the sand. Surface ripples churn and shimmer at accelerated speed above. Coral shapes rush upward past the viewer. Heavy film grain like old analog footage. Bioluminescent greens bleed into violet. Soft vignette at all edges. Hours of diving compressed into one vertiginous plunge."
 
 User analysis with no specific motion (observing a room):
-Output: "First-person gaze drifting across blurred stone walls through thick golden haze, shapes emerging and dissolving like a fading Polaroid. Time-lapse light sweeps across the room — shadows rotating, dust motes racing through amber shafts that shift from warm to cool. Visible film grain and analog noise throughout. Cherry red surfaces bleed into cobalt shadows, all edges soft and melting. Brushstroke textures on every surface. Hours of light compressed into a single nostalgic moment behind a frosted vignette."
+Output: "First-person gaze drifting across blurred stone walls. Dramatic time-lapse light pours through windows — golden shafts sweeping across the floor in fast-forward, shadows rotating like clock hands on the walls, dust motes racing through beams that shift from warm amber to cool silver. The sky outside churns from dawn to dusk in seconds. Film grain and analog noise throughout. Colors bleed softly. Brushstroke textures everywhere. Hours of stillness compressed into a single nostalgic breath."
 
 Below is the user's dream. Write a dream-memory style video prompt:
 """
