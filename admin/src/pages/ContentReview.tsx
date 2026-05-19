@@ -73,6 +73,53 @@ export default function ContentReviewPage() {
     }
   };
 
+  const getArtistName = (url: string) => {
+    // Extract from: .../artists/sage/masterwork.jpg → "sage"
+    const match = url?.match(/\/artists\/([^/]+)\//);
+    return match ? match[1] : '?';
+  };
+
+  const renderArtistRefs = (item: any) => {
+    const meta = item.metadata || {};
+    if (item.type === 'image') {
+      const refs: string[] = meta.all_artist_references || (meta.artist_reference ? [meta.artist_reference] : []);
+      if (refs.length === 0) return null;
+      return (
+        <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+          {refs.map((url: string, i: number) => (
+            <Tooltip key={i} title={getArtistName(url)}>
+              <Image
+                src={url}
+                width={32}
+                height={32}
+                style={{ objectFit: 'cover', borderRadius: 4, cursor: 'pointer', border: url === meta.artist_reference ? '1.5px solid #7c5cfc' : '1.5px solid rgba(255,255,255,0.1)' }}
+                preview={{ mask: getArtistName(url) }}
+                onClick={(e) => e?.stopPropagation()}
+              />
+            </Tooltip>
+          ))}
+        </div>
+      );
+    }
+    if (item.type === 'video' && meta.reference_image) {
+      return (
+        <div style={{ marginTop: 6 }}>
+          <Tooltip title="参考图">
+            <Image
+              src={meta.reference_image}
+              width={32}
+              height={32}
+              style={{ objectFit: 'cover', borderRadius: 4, border: '1.5px solid rgba(255,255,255,0.1)' }}
+              preview={{ mask: '参考图' }}
+              onClick={(e) => e?.stopPropagation()}
+            />
+          </Tooltip>
+        </div>
+      );
+    }
+    return null;
+  };
+
   const renderMediaCard = (item: any, showCheckbox: boolean, showReject: boolean) => (
     <div
       key={item.id}
@@ -141,6 +188,7 @@ export default function ContentReviewPage() {
           </p>
         </Tooltip>
         <p style={{ color: '#6b7280', fontSize: 11, margin: '2px 0 0' }}>{item.user}</p>
+        {renderArtistRefs(item)}
       </div>
     </div>
   );
