@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
 # ===== Simple Admin Auth (hardcoded for now) =====
-ADMIN_EMAILS = ["carter@dreamrecorder.xyz", "admin@dreamrecorder.xyz"]
+ADMIN_EMAILS = ["carter@dreamrecorder.xyz", "admin@dreamrecorder.xyz", "xtycome5@gmail.com"]
 
 
 async def require_admin(user_id: str = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
