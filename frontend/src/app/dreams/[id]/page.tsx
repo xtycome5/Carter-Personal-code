@@ -10,10 +10,12 @@ import {
   RefreshCw,
   Download,
   ArrowLeft,
+  Share2,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/authStore";
 import { dreamsAPI, generateAPI } from "@/lib/api";
+import ShareCardModal from "@/components/ShareCardModal";
 
 interface Generation {
   id: string;
@@ -42,6 +44,10 @@ export default function DreamDetailPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState<string | null>(null);
   const [polling, setPolling] = useState<Set<string>>(new Set());
+  const [shareModal, setShareModal] = useState<{
+    mediaUrl: string;
+    mediaType: "image" | "video";
+  } | null>(null);
 
   useEffect(() => {
     if (token && dreamId) loadDream();
@@ -169,14 +175,27 @@ export default function DreamDetailPage() {
                             alt="Dream visualization"
                             className="w-full aspect-square object-cover"
                           />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                             <a
                               href={gen.result_url}
                               target="_blank"
                               className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                              title="Download"
                             >
                               <Download className="w-5 h-5 text-white" />
                             </a>
+                            <button
+                              onClick={() =>
+                                setShareModal({
+                                  mediaUrl: gen.result_url!,
+                                  mediaType: "image",
+                                })
+                              }
+                              className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                              title="Share"
+                            >
+                              <Share2 className="w-5 h-5 text-white" />
+                            </button>
                           </div>
                         </div>
                       ) : gen.status === "processing" ? (
@@ -225,11 +244,35 @@ export default function DreamDetailPage() {
                   {videos.map((gen) => (
                     <div key={gen.id} className="card overflow-hidden">
                       {gen.status === "completed" && gen.result_url ? (
-                        <video
-                          src={gen.result_url}
-                          controls
-                          className="w-full aspect-square object-cover"
-                        />
+                        <div className="relative group">
+                          <video
+                            src={gen.result_url}
+                            controls
+                            className="w-full aspect-square object-cover"
+                          />
+                          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                            <a
+                              href={gen.result_url}
+                              target="_blank"
+                              className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+                              title="Download"
+                            >
+                              <Download className="w-4 h-4 text-white" />
+                            </a>
+                            <button
+                              onClick={() =>
+                                setShareModal({
+                                  mediaUrl: gen.result_url!,
+                                  mediaType: "video",
+                                })
+                              }
+                              className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+                              title="Share"
+                            >
+                              <Share2 className="w-4 h-4 text-white" />
+                            </button>
+                          </div>
+                        </div>
                       ) : gen.status === "processing" ? (
                         <div className="aspect-square flex items-center justify-center bg-[var(--bg-elevated)]">
                           <div className="text-center">
@@ -368,6 +411,41 @@ export default function DreamDetailPage() {
               </div>
             </div>
 
+            {/* Share */}
+            {(hasCompletedImage || videos.some(v => v.status === "completed" && v.result_url)) && (
+              <div className="card p-5">
+                <h3 className="text-sm font-medium text-[var(--text-primary)] mb-4">Share</h3>
+                <div className="space-y-2">
+                  {(() => {
+                    const latestImage = [...images].reverse().find(g => g.status === "completed" && g.result_url);
+                    const latestVideo = [...videos].reverse().find(g => g.status === "completed" && g.result_url);
+                    return (
+                      <>
+                        {latestImage && (
+                          <button
+                            onClick={() => setShareModal({ mediaUrl: latestImage.result_url!, mediaType: "image" })}
+                            className="btn-secondary w-full flex items-center justify-center gap-2"
+                          >
+                            <Share2 className="w-4 h-4" />
+                            Share Image
+                          </button>
+                        )}
+                        {latestVideo && (
+                          <button
+                            onClick={() => setShareModal({ mediaUrl: latestVideo.result_url!, mediaType: "video" })}
+                            className="btn-secondary w-full flex items-center justify-center gap-2"
+                          >
+                            <Share2 className="w-4 h-4" />
+                            Share Video
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+
             {/* Info */}
             <div className="card p-5">
               <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">About</h3>
@@ -391,6 +469,19 @@ export default function DreamDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Share Card Modal */}
+      {dream && shareModal && (
+        <ShareCardModal
+          open={!!shareModal}
+          onClose={() => setShareModal(null)}
+          dreamContent={dream.content}
+          dreamTitle={dream.title}
+          mediaUrl={shareModal.mediaUrl}
+          mediaType={shareModal.mediaType}
+          createdAt={dream.created_at}
+        />
+      )}
     </div>
   );
 }
