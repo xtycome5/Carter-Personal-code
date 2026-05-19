@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     VIDEO_I2V_MODEL: str = "happyhorse-1.0-i2v"
     VIDEO_R2V_MODEL: str = "happyhorse-1.0-r2v"
 
+    # Admin (independent auth, not tied to user table)
+    ADMIN_USERNAME: str = "admin"
+    ADMIN_PASSWORD: str = "dreamrecorder2026"
+
     # OAuth
     GOOGLE_CLIENT_ID: Optional[str] = None
     GOOGLE_CLIENT_SECRET: Optional[str] = None

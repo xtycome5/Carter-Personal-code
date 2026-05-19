@@ -2,32 +2,66 @@
 Admin Routes - 后台管理 API
 
 提供 Dashboard 统计、用户管理、内容审核、画家池管理、API调用监控等接口。
-当前用硬编码 admin 账号验证（后续可改为 role-based）。
+Admin 使用独立认证体系，与 C 端用户完全分离。
 """
 from uuid import UUID
 from typing import Optional
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, case, desc, update
+from jose import jwt, JWTError
 from app.db.session import get_db
 from app.models.models import User, Dream, Generation, ApiCallLog, Artist
-from app.core.security import get_current_user
+from app.core.config import settings
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
+admin_security = HTTPBearer(auto_error=False)
 
-# ===== Simple Admin Auth (hardcoded for now) =====
-ADMIN_EMAILS = ["carter@dreamrecorder.xyz", "admin@dreamrecorder.xyz", "xtycome5@gmail.com"]
+ADMIN_JWT_ALGORITHM = "HS256"
+ADMIN_JWT_EXPIRE_HOURS = 72  # Admin token 有效期 3 天
 
 
-async def require_admin(user_id: str = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
-    """验证当前用户是管理员"""
-    result = await db.execute(select(User).where(User.id == UUID(user_id)))
-    user = result.scalar_one_or_none()
-    if not user or user.email not in ADMIN_EMAILS:
+# ===== Independent Admin Auth =====
+@router.post("/login")
+async def admin_login(data: dict):
+    """Admin 独立登录 — 不依赖 C 端用户表"""
+    username = data.get("username", "")
+    password = data.get("password", "")
+
+    if username != settings.ADMIN_USERNAME or password != settings.ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid admin credentials")
+
+    # 签发带 role=admin 的 JWT
+    expire = datetime.now(timezone.utc) + timedelta(hours=ADMIN_JWT_EXPIRE_HOURS)
+    token = jwt.encode(
+        {"sub": username, "role": "admin", "exp": expire},
+        settings.SECRET_KEY,
+        algorithm=ADMIN_JWT_ALGORITHM,
+    )
+    return {"access_token": token, "token_type": "bearer", "username": username}
+
+
+async def require_admin(
+    credentials: HTTPAuthorizationCredentials = Depends(admin_security),
+):
+    """验证 Admin JWT — 检查 role=admin claim"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = jwt.decode(
+            credentials.credentials,
+            settings.SECRET_KEY,
+            algorithms=[ADMIN_JWT_ALGORITHM],
+        )
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired admin token")
+
+    if payload.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
-    return user_id
+    return payload.get("sub")
 
 
 # ===== Dashboard Stats =====

@@ -5,10 +5,10 @@ import { LockOutlined, UserOutlined } from '@ant-design/icons';
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
-  const onFinish = async (values: { email: string; password: string }) => {
+  const onFinish = async (values: { username: string; password: string }) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
@@ -45,8 +45,8 @@ export default function LoginPage() {
         </div>
 
         <Form onFinish={onFinish} layout="vertical" size="large">
-          <Form.Item name="email" rules={[{ required: true, message: 'Email required' }]}>
-            <Input prefix={<UserOutlined />} placeholder="Admin email" />
+          <Form.Item name="username" rules={[{ required: true, message: 'Username required' }]}>
+            <Input prefix={<UserOutlined />} placeholder="Admin username" />
           </Form.Item>
           <Form.Item name="password" rules={[{ required: true, message: 'Password required' }]}>
             <Input.Password prefix={<LockOutlined />} placeholder="Password" />
