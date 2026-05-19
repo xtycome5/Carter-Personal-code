@@ -67,4 +67,10 @@ export const adminAPI = {
     return request<any>(`/admin/api-calls?${query}`);
   },
   getApiStats: (hours = 24) => request<any>(`/admin/api-stats?hours=${hours}`),
+
+  // Gallery Review
+  galleryPending: (page = 1) => request<any>(`/admin/gallery/pending?page=${page}`),
+  galleryFeatured: (page = 1) => request<any>(`/admin/gallery/featured?page=${page}`),
+  galleryApprove: (ids: string[]) => request<any>('/admin/gallery/approve', { method: 'POST', body: JSON.stringify({ ids }) }),
+  galleryReject: (ids: string[]) => request<any>('/admin/gallery/reject', { method: 'POST', body: JSON.stringify({ ids }) }),
 };

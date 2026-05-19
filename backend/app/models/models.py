@@ -57,6 +57,9 @@ class Generation(Base):
     task_id = Column(String(255), nullable=True)  # DashScope 任务ID
     result_url = Column(String(1000), nullable=True)  # 生成结果URL
     metadata_json = Column(JSON, default=dict)  # 元数据
+    # Gallery审核字段
+    featured = Column(Boolean, default=False, index=True)  # 是否上架到Gallery
+    featured_at = Column(DateTime(timezone=True), nullable=True)  # 上架时间（用于排序）
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Relationships

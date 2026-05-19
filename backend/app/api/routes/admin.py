@@ -9,7 +9,7 @@ from typing import Optional
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, case, desc
+from sqlalchemy import select, func, case, desc, update
 from app.db.session import get_db
 from app.models.models import User, Dream, Generation, ApiCallLog, Artist
 from app.core.security import get_current_user
@@ -468,3 +468,142 @@ async def get_api_stats(
         "model_breakdown": model_breakdown,
         "endpoint_breakdown": endpoint_breakdown,
     }
+
+
+# ===== Gallery Review (Featured/Approved) =====
+@router.get("/gallery/pending")
+async def gallery_pending(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    admin_id: str = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """获取待审核列表 — 已完成但未上架的图片/视频"""
+    query = (
+        select(Generation)
+        .where(
+            Generation.status == "completed",
+            Generation.featured == False,
+            Generation.result_url.isnot(None),
+        )
+        .order_by(desc(Generation.created_at))
+    )
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total = await db.scalar(count_query) or 0
+
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    result = await db.execute(query)
+    generations = result.scalars().all()
+
+    items = []
+    for g in generations:
+        dream_result = await db.execute(select(Dream.title, Dream.content).where(Dream.id == g.dream_id))
+        dream_row = dream_result.one_or_none()
+        dream_title = (dream_row.title or dream_row.content[:30]) if dream_row else "Unknown"
+
+        user_result = await db.execute(select(User.email, User.nickname).where(User.id == g.user_id))
+        user_row = user_result.one_or_none()
+        user_name = (user_row.nickname or user_row.email.split("@")[0]) if user_row else "Unknown"
+
+        items.append({
+            "id": str(g.id),
+            "type": g.type,
+            "dream_title": dream_title,
+            "dream_content": dream_row.content[:80] if dream_row else "",
+            "user": user_name,
+            "result_url": g.result_url,
+            "metadata": g.metadata_json,
+            "created_at": g.created_at.isoformat() if g.created_at else None,
+        })
+
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
+
+
+@router.get("/gallery/featured")
+async def gallery_featured(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    admin_id: str = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """获取已上架列表"""
+    query = (
+        select(Generation)
+        .where(Generation.featured == True)
+        .order_by(desc(Generation.featured_at))
+    )
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total = await db.scalar(count_query) or 0
+
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    result = await db.execute(query)
+    generations = result.scalars().all()
+
+    items = []
+    for g in generations:
+        dream_result = await db.execute(select(Dream.title, Dream.content).where(Dream.id == g.dream_id))
+        dream_row = dream_result.one_or_none()
+        dream_title = (dream_row.title or dream_row.content[:30]) if dream_row else "Unknown"
+
+        user_result = await db.execute(select(User.email, User.nickname).where(User.id == g.user_id))
+        user_row = user_result.one_or_none()
+        user_name = (user_row.nickname or user_row.email.split("@")[0]) if user_row else "Unknown"
+
+        items.append({
+            "id": str(g.id),
+            "type": g.type,
+            "dream_title": dream_title,
+            "user": user_name,
+            "result_url": g.result_url,
+            "featured_at": g.featured_at.isoformat() if g.featured_at else None,
+            "created_at": g.created_at.isoformat() if g.created_at else None,
+        })
+
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
+
+
+@router.post("/gallery/approve")
+async def gallery_approve(
+    data: dict,
+    admin_id: str = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """批量上架 — 把指定 generation 标记为 featured"""
+    ids = data.get("ids", [])
+    if not ids:
+        raise HTTPException(status_code=400, detail="No ids provided")
+
+    now = datetime.now(timezone.utc)
+    for gid in ids:
+        result = await db.execute(select(Generation).where(Generation.id == UUID(gid)))
+        gen = result.scalar_one_or_none()
+        if gen and gen.status == "completed":
+            gen.featured = True
+            gen.featured_at = now
+
+    await db.commit()
+    return {"message": f"Approved {len(ids)} items", "ids": ids}
+
+
+@router.post("/gallery/reject")
+async def gallery_reject(
+    data: dict,
+    admin_id: str = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """下架 — 把指定 generation 取消 featured"""
+    ids = data.get("ids", [])
+    if not ids:
+        raise HTTPException(status_code=400, detail="No ids provided")
+
+    for gid in ids:
+        result = await db.execute(select(Generation).where(Generation.id == UUID(gid)))
+        gen = result.scalar_one_or_none()
+        if gen:
+            gen.featured = False
+            gen.featured_at = None
+
+    await db.commit()
+    return {"message": f"Rejected {len(ids)} items", "ids": ids}

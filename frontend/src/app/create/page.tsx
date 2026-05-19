@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Sparkles, Image as ImageIcon, Send } from "lucide-react";
+import { Sparkles, Image as ImageIcon, Send, Play } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
-import { dreamsAPI, generateAPI } from "@/lib/api";
+import { dreamsAPI, generateAPI, galleryAPI } from "@/lib/api";
+
+interface GalleryItem {
+  id: string;
+  type: "image" | "video";
+  result_url: string;
+  dream_title: string;
+  user: string;
+}
 
 export default function CreatePage() {
   const { token, user } = useAuthStore();
@@ -15,6 +23,14 @@ export default function CreatePage() {
   const [title, setTitle] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+
+  // Fetch gallery items for "Today's Dreams" section
+  useEffect(() => {
+    galleryAPI.list(1, 8)
+      .then((res) => setGalleryItems(res.items || []))
+      .catch(() => {});
+  }, []);
 
   // Redirect to auth when unauthenticated user tries to interact
   const requireAuth = () => {
@@ -174,7 +190,7 @@ export default function CreatePage() {
           </div>
         </div>
 
-        {/* Explore Section - Daily Top 20 */}
+        {/* Explore Section - Today's Dreams */}
         <div className="px-8 pb-16">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
@@ -186,14 +202,59 @@ export default function CreatePage() {
               </a>
             </div>
 
-            {/* Placeholder for gallery - will be populated by API */}
-            <div className="gallery-grid">
-              {/* Empty state */}
-              <div className="col-span-full text-center py-16 text-[var(--text-muted)]">
-                <p className="text-sm">Dream gallery coming soon</p>
-                <p className="text-xs mt-1">The best dreams of the day will appear here</p>
+            {galleryItems.length > 0 ? (
+              <div className="gallery-grid">
+                {galleryItems.map((item, i) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="gallery-card group"
+                  >
+                    <div className="relative aspect-square rounded-xl overflow-hidden bg-[var(--bg-elevated)]">
+                      {item.type === "image" ? (
+                        <img
+                          src={item.result_url}
+                          alt={item.dream_title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="relative w-full h-full">
+                          <video
+                            src={item.result_url}
+                            className="w-full h-full object-cover"
+                            muted
+                            loop
+                            playsInline
+                            onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
+                            onMouseOut={(e) => { const v = e.target as HTMLVideoElement; v.pause(); v.currentTime = 0; }}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-80 group-hover:opacity-0 transition-opacity">
+                            <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
+                              <Play className="w-4 h-4 text-white ml-0.5" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <p className="text-white text-sm font-medium truncate">{item.dream_title}</p>
+                          <p className="text-white/70 text-xs mt-0.5">{item.user}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <div className="gallery-grid">
+                <div className="col-span-full text-center py-16 text-[var(--text-muted)]">
+                  <p className="text-sm">Dream gallery coming soon</p>
+                  <p className="text-xs mt-1">The best dreams of the day will appear here</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

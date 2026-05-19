@@ -101,3 +101,14 @@ export const generateAPI = {
   checkStatus: (token: string, generationId: string) =>
     apiRequest(`/api/generate/task/${generationId}`, { token }),
 };
+
+// Gallery API (public, no auth needed)
+export const galleryAPI = {
+  list: (page = 1, pageSize = 20, genType?: string) => {
+    const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+    if (genType) params.set("gen_type", genType);
+    return apiRequest<{ items: any[]; total: number; page: number; page_size: number }>(
+      `/api/gallery?${params.toString()}`
+    );
+  },
+};

@@ -1,165 +1,203 @@
 import { useEffect, useState } from 'react';
-import { Card, Table, Tag, Image, Tabs, Spin, Tooltip } from 'antd';
-import { PictureOutlined, VideoCameraOutlined } from '@ant-design/icons';
+import { Card, Image, Tabs, Spin, Button, Checkbox, message, Tag, Empty, Tooltip } from 'antd';
+import { CheckOutlined, CloseOutlined, PictureOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import { adminAPI } from '../lib/api';
 
 export default function ContentReviewPage() {
-  const [data, setData] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
+  const [pendingData, setPendingData] = useState<any[]>([]);
+  const [featuredData, setFeaturedData] = useState<any[]>([]);
+  const [pendingTotal, setPendingTotal] = useState(0);
+  const [featuredTotal, setFeaturedTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  const [typeFilter] = useState<string | undefined>(undefined);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState('pending');
 
-  const fetchData = (p: number, status?: string, type?: string) => {
+  const fetchPending = (page = 1) => {
     setLoading(true);
-    adminAPI.listGenerations({ page: p, status, gen_type: type })
+    adminAPI.galleryPending(page)
       .then(res => {
-        setData(res.generations || []);
-        setTotal(res.total || 0);
+        setPendingData(res.items || []);
+        setPendingTotal(res.total || 0);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchData(1); }, []);
-
-  const handleTabChange = (key: string) => {
-    const s = key === 'all' ? undefined : key;
-    setStatusFilter(s);
-    setPage(1);
-    fetchData(1, s, typeFilter);
+  const fetchFeatured = (page = 1) => {
+    setLoading(true);
+    adminAPI.galleryFeatured(page)
+      .then(res => {
+        setFeaturedData(res.items || []);
+        setFeaturedTotal(res.total || 0);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   };
 
-  const columns = [
-    {
-      title: 'Preview',
-      dataIndex: 'result_url',
-      key: 'preview',
-      width: 80,
-      render: (url: string, record: any) => (
-        url && record.type === 'image' ? (
-          <Image src={url} width={60} height={60} style={{ objectFit: 'cover', borderRadius: 6 }} />
+  useEffect(() => { fetchPending(); fetchFeatured(); }, []);
+
+  const handleApprove = async () => {
+    if (selectedIds.length === 0) { message.warning('请选择要上架的作品'); return; }
+    try {
+      await adminAPI.galleryApprove(selectedIds);
+      message.success(`已上架 ${selectedIds.length} 个作品`);
+      setSelectedIds([]);
+      fetchPending();
+      fetchFeatured();
+    } catch (e: any) {
+      message.error(e.message);
+    }
+  };
+
+  const handleReject = async (ids: string[]) => {
+    try {
+      await adminAPI.galleryReject(ids);
+      message.success(`已下架 ${ids.length} 个作品`);
+      fetchFeatured();
+    } catch (e: any) {
+      message.error(e.message);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const selectAll = () => {
+    if (selectedIds.length === pendingData.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(pendingData.map(i => i.id));
+    }
+  };
+
+  const renderMediaCard = (item: any, showCheckbox: boolean, showReject: boolean) => (
+    <div
+      key={item.id}
+      style={{
+        position: 'relative',
+        borderRadius: 12,
+        overflow: 'hidden',
+        background: '#1a1a2e',
+        border: selectedIds.includes(item.id) ? '2px solid #7c5cfc' : '2px solid transparent',
+        cursor: showCheckbox ? 'pointer' : 'default',
+      }}
+      onClick={() => showCheckbox && toggleSelect(item.id)}
+    >
+      {/* Media */}
+      <div style={{ aspectRatio: '1', position: 'relative' }}>
+        {item.type === 'image' ? (
+          <Image
+            src={item.result_url}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            preview={{ mask: '查看大图' }}
+            onClick={(e) => e?.stopPropagation()}
+          />
         ) : (
-          <div style={{ width: 60, height: 60, background: '#1a1a2e', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#6b7280' }}>
-            {record.type === 'video' ? '▶' : '—'}
+          <video
+            src={item.result_url}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            muted
+            loop
+            playsInline
+            onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
+            onMouseOut={(e) => { const v = e.target as HTMLVideoElement; v.pause(); v.currentTime = 0; }}
+          />
+        )}
+        {/* Type badge */}
+        <div style={{ position: 'absolute', top: 8, left: 8 }}>
+          <Tag color={item.type === 'image' ? 'purple' : 'blue'} style={{ margin: 0 }}>
+            {item.type === 'image' ? <PictureOutlined /> : <VideoCameraOutlined />}
+          </Tag>
+        </div>
+        {/* Checkbox */}
+        {showCheckbox && (
+          <div style={{ position: 'absolute', top: 8, right: 8 }} onClick={(e) => e.stopPropagation()}>
+            <Checkbox checked={selectedIds.includes(item.id)} onChange={() => toggleSelect(item.id)} />
           </div>
-        )
-      ),
-    },
-    { title: 'Dream', dataIndex: 'dream_title', key: 'dream_title', ellipsis: true },
-    {
-      title: 'Type',
-      dataIndex: 'type',
-      key: 'type',
-      width: 90,
-      render: (v: string) => (
-        <Tag color={v === 'image' ? 'purple' : 'blue'}>
-          {v === 'image' ? <PictureOutlined /> : <VideoCameraOutlined />} {v}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Mode',
-      key: 'mode',
-      width: 90,
-      render: (_: any, record: any) => {
-        const mode = record.metadata?.mode;
-        if (!mode) return <span style={{ color: '#6b7280' }}>—</span>;
-        const modeColors: Record<string, string> = {
-          artist_ref: 'geekblue',
-          t2i: 'cyan',
-          v2i: 'magenta',
-          r2v: 'volcano',
-        };
-        return <Tag color={modeColors[mode] || 'default'}>{mode}</Tag>;
-      },
-    },
-    {
-      title: 'Artist Ref',
-      key: 'artist_ref',
-      width: 70,
-      render: (_: any, record: any) => {
-        const refUrl = record.metadata?.artist_reference;
-        if (!refUrl) return <span style={{ color: '#6b7280' }}>—</span>;
-        return (
-          <Tooltip title={refUrl.split('/artists/')[1] || refUrl}>
-            <Image
-              src={refUrl}
-              width={40}
-              height={40}
-              style={{ objectFit: 'cover', borderRadius: 4 }}
-              fallback="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMmEyYTNlIi8+PC9zdmc+"
-            />
-          </Tooltip>
-        );
-      },
-    },
-    { title: 'User', dataIndex: 'user', key: 'user', width: 100 },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (v: string) => {
-        const colors: Record<string, string> = { completed: 'green', failed: 'red', processing: 'orange', pending: 'default' };
-        return <Tag color={colors[v] || 'default'}>{v}</Tag>;
-      },
-    },
-    {
-      title: 'Prompt',
-      dataIndex: 'prompt',
-      key: 'prompt',
-      ellipsis: true,
-      width: 200,
-      render: (v: string) => (
-        <Tooltip title={v}>
-          <span style={{ fontSize: 11, color: '#9ca3af' }}>{v}</span>
+        )}
+        {/* Reject button for featured */}
+        {showReject && (
+          <div style={{ position: 'absolute', top: 8, right: 8 }}>
+            <Button
+              type="primary"
+              danger
+              size="small"
+              icon={<CloseOutlined />}
+              onClick={() => handleReject([item.id])}
+            >
+              下架
+            </Button>
+          </div>
+        )}
+      </div>
+      {/* Info */}
+      <div style={{ padding: '8px 10px' }}>
+        <Tooltip title={item.dream_title || item.dream_content}>
+          <p style={{ color: '#f0f0f5', fontSize: 13, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {item.dream_title || item.dream_content || '—'}
+          </p>
         </Tooltip>
-      ),
-    },
-    {
-      title: 'Created',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 150,
-      render: (v: string) => v ? new Date(v).toLocaleString() : '-',
-    },
-  ];
+        <p style={{ color: '#6b7280', fontSize: 11, margin: '2px 0 0' }}>{item.user}</p>
+      </div>
+    </div>
+  );
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ color: '#f0f0f5', margin: 0 }}>内容审核</h2>
-        <p style={{ color: '#9ca3af', fontSize: 13, margin: '4px 0 0' }}>
-          {total} total generations
-        </p>
+      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ color: '#f0f0f5', margin: 0 }}>Gallery 审核</h2>
+          <p style={{ color: '#9ca3af', fontSize: 13, margin: '4px 0 0' }}>
+            待审核 {pendingTotal} · 已上架 {featuredTotal}
+          </p>
+        </div>
+        {activeTab === 'pending' && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button onClick={selectAll}>
+              {selectedIds.length === pendingData.length && pendingData.length > 0 ? '取消全选' : '全选'}
+            </Button>
+            <Button
+              type="primary"
+              icon={<CheckOutlined />}
+              onClick={handleApprove}
+              disabled={selectedIds.length === 0}
+            >
+              上架 ({selectedIds.length})
+            </Button>
+          </div>
+        )}
       </div>
 
       <Card>
         <Tabs
-          onChange={handleTabChange}
+          activeKey={activeTab}
+          onChange={(key) => { setActiveTab(key); setSelectedIds([]); }}
           items={[
-            { key: 'all', label: 'All' },
-            { key: 'completed', label: 'Completed' },
-            { key: 'failed', label: 'Failed' },
-            { key: 'processing', label: 'Processing' },
+            { key: 'pending', label: `待审核 (${pendingTotal})` },
+            { key: 'featured', label: `已上架 (${featuredTotal})` },
           ]}
         />
         <Spin spinning={loading}>
-          <Table
-            dataSource={data}
-            columns={columns}
-            rowKey="id"
-            pagination={{
-              current: page,
-              total,
-              pageSize: 20,
-              onChange: (p) => { setPage(p); fetchData(p, statusFilter, typeFilter); },
-            }}
-            size="small"
-            scroll={{ x: 900 }}
-          />
+          {activeTab === 'pending' ? (
+            pendingData.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+                {pendingData.map(item => renderMediaCard(item, true, false))}
+              </div>
+            ) : (
+              <Empty description="没有待审核的作品" />
+            )
+          ) : (
+            featuredData.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+                {featuredData.map(item => renderMediaCard(item, false, true))}
+              </div>
+            ) : (
+              <Empty description="还没有上架的作品" />
+            )
+          )}
         </Spin>
       </Card>
     </div>
